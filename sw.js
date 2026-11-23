@@ -1,5 +1,5 @@
 // TRAZOS · funciona sin internet. Al publicar una versión nueva, cambia VERSION.
-const VERSION = 'trazos-2026-11-23';
+const VERSION = 'trazos-2026-11-23c';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-maskable.png', './icons/apple-touch-icon.png'];
 self.addEventListener('install', e => { e.waitUntil(caches.open(VERSION).then(c => c.addAll(FILES))); self.skipWaiting(); });
 self.addEventListener('activate', e => {

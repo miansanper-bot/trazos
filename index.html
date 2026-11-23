@@ -163,6 +163,10 @@ th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.
 .prog span{font-size:.8rem;font-weight:800;border-radius:999px;padding:4px 9px;background:#EFE6D2}
 .prog span.ok{background:#CDEFDD;color:#0F6B43}
 .help li{margin:4px 0}
+.clsbar{margin-top:12px}
+.clsrow{display:flex;align-items:center;gap:10px;padding:8px 4px;border-bottom:2px solid #F3EBDA;flex-wrap:wrap}
+.clsrow input{border:2px solid var(--line);border-radius:10px;padding:8px 10px;font-size:1rem;font-weight:800;min-width:140px;max-width:260px;flex:1}
+.srow select,.selcls{border:2px solid var(--line);border-radius:10px;padding:8px;font-size:.95rem;font-weight:800;background:#fff;color:var(--ink)}
 
 /* Modal */
 .modal{position:fixed;inset:0;background:rgba(35,48,79,.45);display:grid;place-items:center;z-index:50;animation:fade .2s;padding:16px}
@@ -274,9 +278,9 @@ const copyLine=()=>`<footer class="copy">${BRAND} by ${COMPANY} · ${COPY}</foot
 /* ------------------------------ DATOS ------------------------------ */
 const KEY='trazos_superate_v1';
 let DB, MEM_ONLY=false;
-function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,sound:true,voice:true,strict:'media',stop:2},students:[],assignments:[],results:[],records:{}};}
+function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,sound:true,voice:true,strict:'media',stop:2},students:[],classes:[],assignments:[],results:[],records:{}};}
 function load(){
-  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});}
+  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});DB.classes=DB.classes||[];}
   catch(e){DB=defaultDB();MEM_ONLY=true;}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){MEM_ONLY=true;}}
@@ -904,6 +908,17 @@ function confetti(n){const box=document.createElement('div');box.className='conf
 const S={screen:'home',sid:null,ttab:'alumnos',rsid:null,form:null,session:null,engine:null,timerIv:null,autoT:null,
   practice:{set:'grafo',style:'lower',mode:'ball',size:1,reps:3,helps:'full',text:'ma me mi mo mu pa pe pi po pu la le li lo lu sa se si so su'}};
 const student=()=>DB.students.find(s=>s.id===S.sid)||null;
+/* ---- Clases: filtro «Todas / clase» (se recuerda en este dispositivo) ---- */
+const CLS_KEY='trazos_clase_sel';
+try{S.cls=localStorage.getItem(CLS_KEY)||'';}catch(e){S.cls='';}
+const clsName=id=>(DB.classes.find(c=>c.id===id)||{}).name||'';
+function curCls(){if(S.cls&&S.cls!=='_none'&&!DB.classes.some(c=>c.id===S.cls))S.cls='';if(S.cls==='_none'&&!DB.students.some(s=>!s.classId))S.cls='';return S.cls;}
+const inCls=s=>{const c=curCls();return !c||(c==='_none'?!s.classId:s.classId===c);};
+const visStudents=()=>DB.students.filter(inCls);
+function clsBar(){
+  if(!DB.classes.length)return '';const c=curCls();const none=DB.students.some(s=>!s.classId);
+  return `<div class="seg clsbar">${[['','👥 Todas'],...DB.classes.map(k=>[k.id,'🏫 '+esc(k.name)]),...(none?[['_none','Sin clase']]:[])].map(([id,n])=>`<button class="${c===id?'on':''}" data-act="cls" data-v="${id}">${n}</button>`).join('')}</div>`;
+}
 function go(screen){stopPlay();S.screen=screen;render();window.scrollTo(0,0);}
 function render(){({home:renderHome,student:renderStudent,teacher:renderTeacher,play:renderPlay})[S.screen]();}
 
@@ -931,13 +946,13 @@ function downloadFallback(name,text,mime){
 
 /* ================================ INICIO ================================ */
 function renderHome(){
-  const st=DB.students;
+  const st=visStudents();
   app.innerHTML=`<div class="wrap">
-   <header class="hero"><div class="logo">✍️</div><div class="grow">${kidLogo()}<p class="tag">¡Supérate! Tú puedes 💪</p></div><button class="btn ghost" data-act="teacher">⚙️ Docente</button></header>
+   <header class="hero"><div class="logo">✍️</div><div class="grow">${kidLogo()}<p class="tag">¡Supérate! Tú puedes 💪</p></div><button class="btn ghost" data-act="fs" title="Pantalla completa">⛶</button><button class="btn ghost" data-act="teacher">⚙️ Docente</button></header>
    ${MEM_ONLY?'<div class="warn">⚠️ Este navegador no permite guardar datos. Lo que se haga se perderá al cerrar. Exporta la copia desde Docente.</div>':''}
-   <div class="card"><h2>¿Quién va a escribir?</h2>
+   <div class="card"><h2>¿Quién va a escribir?</h2>${clsBar()}
     ${st.length?`<div class="avatars">${st.map(s=>`<button class="av" data-act="pick" data-id="${s.id}" style="--c:${s.color}"><span class="emo">${s.avatar}</span><span class="nm">${esc(s.name)}</span><span class="pts">⭐ ${studentStats(s.id).stars} · Nv ${levelOf(s.points).n}</span></button>`).join('')}</div>`
-      :`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
+      :DB.students.length?`<p class="muted">No hay alumnos en esta clase.</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
     <div class="row" style="margin-top:16px"><button class="btn ghost" data-act="guest">👀 Practicar como invitado</button><span class="muted small">El invitado no guarda resultados.</span></div>
    </div></div>${copyLine()}`;
 }
@@ -1051,7 +1066,7 @@ function onFinish(res){
 }
 
 /* ============================ ZONA DOCENTE ============================ */
-function newForm(){return{id:null,title:'',activity:'trace',set:'letras',style:'upper',sel:{},text:'',cons:[],vows:['a','e','i','o','u'],inv:false,cfg:{mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true,stop:DB.settings.stop??2},studentIds:DB.students.map(s=>s.id)};}
+function newForm(){const vs=visStudents();return{id:null,title:'',activity:'trace',set:'letras',style:'upper',sel:{},text:'',cons:[],vows:['a','e','i','o','u'],inv:false,cfg:{mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true,stop:DB.settings.stop??2},studentIds:vs.map(s=>s.id)};}
 function renderTeacher(){
   const sc=$('.wrap')?window.scrollY:0;
   const tabs=[['alumnos','👧 Alumnos'],['tareas','🎯 Tareas'],['resultados','📊 Resultados'],['ajustes','⚙️ Ajustes']];
@@ -1061,9 +1076,14 @@ function renderTeacher(){
    <div class="tabs">${tabs.map(([k,n])=>`<button class="${S.ttab===k?'on':''}" data-act="ttab" data-v="${k}">${n}</button>`).join('')}</div>${body}</div>${copyLine()}`;
   window.scrollTo(0,sc);
 }
+function clsOptions(sel,withNone=true){return (withNone?`<option value="">Sin clase</option>`:'')+DB.classes.map(c=>`<option value="${c.id}" ${sel===c.id?'selected':''}>${esc(c.name)}</option>`).join('');}
 function tAlumnos(){
-  return `<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px"><button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
-  <div class="card"><h2>Lista de clase (${DB.students.length})</h2>${DB.students.length?DB.students.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}"><span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):'<p class="muted">Aún no hay alumnos.</p>'}</div>`;
+  const c=curCls();const list=visStudents();
+  const classes=`<div class="card"><h2>🏫 Clases (${DB.classes.length})</h2><p class="muted small">Crea tus clases y asigna cada alumno a la suya. Luego podrás ver la pantalla de inicio, las tareas y los resultados de una clase o de todas.</p>
+   ${DB.classes.map(k=>`<div class="clsrow"><span style="font-size:1.5rem">🏫</span><input value="${esc(k.name)}" data-cname="${k.id}"><span class="muted small grow">${DB.students.filter(s=>s.classId===k.id).length} alumnos</span><button class="btn danger sm" data-act="delCls" data-id="${k.id}">Eliminar</button></div>`).join('')}
+   <div class="row" style="margin-top:10px"><input class="txtin" id="newCls" placeholder="Nombre de la clase (p. ej. 1.º A)" style="max-width:320px"><button class="btn good" data-act="addCls">➕ Añadir clase</button></div></div>`;
+  return `${classes}<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px">${DB.classes.length?`<label class="muted small" style="font-weight:800">Clase</label><select class="selcls" id="newNamesCls">${clsOptions(c&&c!=='_none'?c:'')}</select>`:''}<button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
+  <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
 }
 function tTareas(){
   let form='';
@@ -1089,20 +1109,20 @@ function tTareas(){
      ${seg('strict',Object.entries(STRICT_N),'Exigencia (cuánto puede salirse antes de contar salida)')}
      ${seg('stop',STOP_OPTS,'Si se queda parado sin mover el dedo… (el intento no vale y vuelve a empezar)')}
      ${seg('guides',[[true,'Con pauta'],[false,'Sin pauta']],'Pauta (líneas)')}
-     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button></div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
+     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button>${DB.classes.map(k=>`<button class="btn ghost sm" data-act="fstuCls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}</div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}${s.classId&&DB.classes.length>1?` <span class="small" style="opacity:.7">· ${esc(clsName(s.classId))}</span>`:''}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
      <div class="row end" style="margin-top:18px"><button class="btn ghost" data-act="fcancel">Cancelar</button><button class="btn good big" data-act="fsave">💾 Guardar tarea</button></div></div>`;
   }
-  const list=DB.assignments.slice().reverse().map(a=>{
-    const prog=a.studentIds.map(id=>{const s=DB.students.find(x=>x.id===id);if(!s)return '';const p=aProgress(a,id);return `<span class="${p.pct>=100?'ok':''}">${s.avatar} ${esc(s.name)} ${p.pct}%</span>`;}).join('');
+  const list=DB.assignments.slice().reverse().filter(a=>!curCls()||a.studentIds.some(id=>{const s=DB.students.find(x=>x.id===id);return s&&inCls(s);})).map(a=>{
+    const prog=a.studentIds.map(id=>{const s=DB.students.find(x=>x.id===id);if(!s||!inCls(s))return '';const p=aProgress(a,id);return `<span class="${p.pct>=100?'ok':''}">${s.avatar} ${esc(s.name)} ${p.pct}%</span>`;}).join('');
     return `<div class="task ${a.active?'':'off'}"><div class="row"><h3 class="grow">${ACTIVITIES[a.activity]?.icon||'✍️'} ${esc(a.title)}</h3><button class="btn ghost sm" data-act="tToggle" data-id="${a.id}">${a.active?'⏸️ Pausar':'▶️ Activar'}</button><button class="btn ghost sm" data-act="tEdit" data-id="${a.id}">✏️</button><button class="btn ghost sm" data-act="tDup" data-id="${a.id}">⧉</button><button class="btn danger sm" data-act="tDel" data-id="${a.id}">🗑️</button></div>
      <div class="muted small">${esc(setLabel(a.set,a.style))} · ${a.items.length} elementos · ${MODE_N[a.cfg.mode]} · Tamaño ${a.cfg.size} · ${a.cfg.reps} rep. · ${HELPS_N[a.cfg.helps]} · Exigencia ${STRICT_N[a.cfg.strict]} · Parada ${a.cfg.stop?a.cfg.stop+' s':'sin control'}</div>
      <div class="mprev" style="margin-top:6px">${a.items.slice(0,14).map(k=>previewSVG(getItem(a.set,a.style,k))).join('')}</div><div class="prog">${prog}</div></div>`;}).join('');
-  return `${form}<div class="card"><div class="row"><h2 class="grow" style="margin:0">Tareas asignadas</h2>${S.form?'':'<button class="btn acc" data-act="fnew">➕ Nueva tarea</button>'}</div><div class="tasks" style="margin-top:12px">${list||'<p class="muted">Aún no hay tareas. Crea una y asígnala a los alumnos: les aparecerá en «Mis misiones».</p>'}</div></div>`;
+  return `${form}<div class="card"><div class="row"><h2 class="grow" style="margin:0">Tareas asignadas</h2>${S.form?'':'<button class="btn acc" data-act="fnew">➕ Nueva tarea</button>'}</div>${clsBar()}<div class="tasks" style="margin-top:12px">${list||'<p class="muted">Aún no hay tareas. Crea una y asígnala a los alumnos: les aparecerá en «Mis misiones».</p>'}</div></div>`;
 }
 function agg(rs){const n=rs.length;if(!n)return null;const sum=k=>rs.reduce((a,r)=>a+(r[k]||0),0);return{n,prec:Math.round(sum('prec')/n),t:sum('t')/n,outs:sum('outs')/n,dir:sum('dir')/n,stars:sum('stars'),bt:Math.min(...rs.map(r=>r.t)),bp:Math.max(...rs.map(r=>r.prec)),sp:sum('speed')/n};}
 function tResultados(){
-  const rows=DB.students.map(s=>{const rs=DB.results.filter(r=>r.sid===s.id);const last=rs.slice(-20);const A=agg(last);
-    return `<tr><td><button class="btn ghost sm" data-act="rsel" data-id="${s.id}">${s.avatar} ${esc(s.name)}</button></td><td>${rs.length}</td><td>${rs.reduce((a,r)=>a+r.stars,0)}</td><td>${A?A.prec+'%':'–'}</td><td>${A?fmt(A.t)+' s':'–'}</td><td>${A?fmt(A.outs):'–'}</td><td>${A?fmt(A.dir):'–'}</td><td>${(s.missions||[]).length}</td><td>${(s.recs||0)}</td></tr>`;}).join('');
+  const rows=visStudents().map(s=>{const rs=DB.results.filter(r=>r.sid===s.id);const last=rs.slice(-20);const A=agg(last);
+    return `<tr><td><button class="btn ghost sm" data-act="rsel" data-id="${s.id}">${s.avatar} ${esc(s.name)}</button>${DB.classes.length&&!curCls()&&s.classId?` <span class="muted small">${esc(clsName(s.classId))}</span>`:''}</td><td>${rs.length}</td><td>${rs.reduce((a,r)=>a+r.stars,0)}</td><td>${A?A.prec+'%':'–'}</td><td>${A?fmt(A.t)+' s':'–'}</td><td>${A?fmt(A.outs):'–'}</td><td>${A?fmt(A.dir):'–'}</td><td>${(s.missions||[]).length}</td><td>${(s.recs||0)}</td></tr>`;}).join('');
   let detail='';const st=DB.students.find(s=>s.id===S.rsid);
   if(st){
     const rs=DB.results.filter(r=>r.sid===st.id);const groups={};
@@ -1117,7 +1137,7 @@ function tResultados(){
      ${rs.slice(-40).reverse().map(r=>`<tr><td>${new Date(r.date).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})}</td><td>${esc(itemLabel(r.set,r.item))}${r.rec?' 🏆':''}</td><td>${r.mode==='ball'?'Bola':'Sin bola'}</td><td>${r.size}</td><td>${fmt(r.t)} s</td><td>${r.prec}%</td><td>${r.outs}</td><td>${r.dir}</td><td>${r.inval||0}</td><td>${'⭐'.repeat(r.stars)}</td></tr>`).join('')}
      </tbody></table></div></div>`;
   }
-  return `<div class="card"><div class="row"><h2 class="grow" style="margin:0">Resumen de la clase</h2><button class="btn" data-act="csv">⬇️ Exportar CSV</button></div><p class="muted small">Medias de los últimos 20 trazos de cada alumno. Toca un nombre para ver el detalle por letra o forma.</p>
+  return `<div class="card"><div class="row"><h2 class="grow" style="margin:0">Resumen de la clase</h2><button class="btn" data-act="csv">⬇️ Exportar CSV</button></div>${clsBar()}<p class="muted small">Medias de los últimos 20 trazos de cada alumno. Toca un nombre para ver el detalle por letra o forma.${curCls()?' El CSV exporta solo esta clase.':''}</p>
    <div class="tscroll"><table><thead><tr><th>Alumno</th><th>Trazos</th><th>⭐</th><th>Precisión</th><th>Tiempo medio</th><th>Salidas/trazo</th><th>Dirección/trazo</th><th>Misiones</th><th>Récords</th></tr></thead><tbody>${rows||'<tr><td colspan="9" class="muted">Sin alumnos.</td></tr>'}</tbody></table></div></div>${detail}`;
 }
 function tAjustes(){
@@ -1130,7 +1150,7 @@ function tAjustes(){
    </div></div>
    <div class="card"><h2>💾 Copia de seguridad</h2><p class="muted small">Los datos se guardan <b>solo en este dispositivo y navegador</b>. Para pasarlos a otra tableta o a tu ordenador, exporta aquí e importa allí. «Combinar» suma alumnos, tareas y resultados sin borrar lo que ya hay.</p>
     <div class="row"><button class="btn" data-act="expJSON">⬇️ Exportar copia (.json)</button><label class="btn ghost">📥 Importar copia<input type="file" id="impFile" accept=".json,application/json" hidden></label></div>
-    <p class="muted small">${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
+    <p class="muted small">${DB.classes.length} clases · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
    <div class="card"><h2>📏 Cómo se mide</h2><ul class="help muted">
     <li><b>Precisión</b>: porcentaje del recorrido del dedo que queda dentro del camino de la letra.</li>
     <li><b>Salida</b>: cada vez que el dedo se aleja del camino más de lo que permite la exigencia. En modo bola, la bola se suelta y hay que volver a cogerla.</li>
@@ -1144,14 +1164,14 @@ function tAjustes(){
    <div class="card"><h2>🧹 Borrar</h2><div class="row"><button class="btn danger" data-act="wipeRes">Borrar todos los resultados</button><button class="btn danger" data-act="wipeAll">Borrar todo</button></div></div>`;
 }
 function exportCSV(){
-  const H=['fecha','alumno','tarea','actividad','conjunto','estilo','elemento','modo','tamaño','exigencia','ayudas','tiempo_s','precision_pct','salidas','errores_direccion','reinicios','velocidad_u_s','estrellas','record'];
+  const H=['fecha','alumno','clase','tarea','actividad','conjunto','estilo','elemento','modo','tamaño','exigencia','ayudas','tiempo_s','precision_pct','salidas','errores_direccion','reinicios','velocidad_u_s','estrellas','record'];
   const q=v=>{v=String(v??'');return /[;"\n]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
-  const lines=DB.results.map(r=>{const s=DB.students.find(x=>x.id===r.sid);const a=DB.assignments.find(x=>x.id===r.aid);
-    return [new Date(r.date).toLocaleString('es-ES'),s?s.name:'(eliminado)',a?a.title:'Práctica libre',r.activity||'trace',SETS[r.set]?.name||r.set,r.style?STYLE_N[r.style]||r.style:'',itemLabel(r.set,r.item),r.mode==='ball'?'Con bola':'Sin bola',r.size,r.strict,r.helps,String(r.t).replace('.',','),r.prec,r.outs,r.dir,r.inval||0,String(r.speed).replace('.',','),r.stars,r.rec?'sí':''].map(q).join(';');});
+  const lines=DB.results.filter(r=>{const s=DB.students.find(x=>x.id===r.sid);return !curCls()||(s&&inCls(s));}).map(r=>{const s=DB.students.find(x=>x.id===r.sid);const a=DB.assignments.find(x=>x.id===r.aid);
+    return [new Date(r.date).toLocaleString('es-ES'),s?s.name:'(eliminado)',s?clsName(s.classId):'',a?a.title:'Práctica libre',r.activity||'trace',SETS[r.set]?.name||r.set,r.style?STYLE_N[r.style]||r.style:'',itemLabel(r.set,r.item),r.mode==='ball'?'Con bola':'Sin bola',r.size,r.strict,r.helps,String(r.t).replace('.',','),r.prec,r.outs,r.dir,r.inval||0,String(r.speed).replace('.',','),r.stars,r.rec?'sí':''].map(q).join(';');});
   download(`trazos_resultados_${new Date().toISOString().slice(0,10)}.csv`,'﻿'+[H.join(';'),...lines].join('\n'),'text/csv;charset=utf-8');
 }
 function mergeDB(inc){
-  ['students','assignments'].forEach(k=>{const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
+  DB.classes=DB.classes||[];['classes','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
   const ids=new Set(DB.results.map(r=>r.id));(inc.results||[]).forEach(r=>{if(!ids.has(r.id))DB.results.push(r);});
   DB.results.sort((a,b)=>a.date<b.date?-1:1);
   for(const sid in (inc.records||{})){const R=DB.records[sid]||(DB.records[sid]={});for(const k in inc.records[sid]){const a=R[k],b=inc.records[sid][k];R[k]=!a?b:{t:Math.min(a.t,b.t),prec:Math.max(a.prec,b.prec)};}}
@@ -1160,6 +1180,7 @@ function mergeDB(inc){
 /* ============================== EVENTOS ============================== */
 const ACT={
  home:()=>go('home'),
+ fs:()=>toggleFS(),
  guest:()=>{S.sid=null;go('student');},
  pick:b=>{S.sid=b.dataset.id;go('student');},
  teacher:()=>askPin(()=>{S.form=null;go('teacher');}),
@@ -1178,7 +1199,11 @@ const ACT={
  again:()=>{const ss=S.session;ss.rep=0;ss.runs=[];renderPlay();},
  smaller:()=>{const ss=S.session;ss.cfg.size=Math.min(5,ss.cfg.size+1);S.practice.size=ss.cfg.size;ss.rep=0;ss.runs=[];renderPlay();},
  ttab:b=>{S.ttab=b.dataset.v;render();},
- addStudents:()=>{const t=$('#newNames').value.split('\n').map(s=>s.trim()).filter(Boolean);t.forEach(name=>{const i=DB.students.length;DB.students.push({id:uid(),name,avatar:AVATARS[i%AVATARS.length],color:COLORS[i%COLORS.length],points:0,badges:[],missions:[],recs:0});});save();render();},
+ cls:b=>{S.cls=b.dataset.v;try{localStorage.setItem(CLS_KEY,S.cls);}catch(e){}render();},
+ addCls:()=>{const i=$('#newCls');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre de la clase.');return;}if(DB.classes.some(c=>c.name.toLowerCase()===n.toLowerCase())){info('Ya hay una clase con ese nombre.');return;}DB.classes.push({id:uid(),name:n});save();render();},
+ delCls:b=>{const k=DB.classes.find(c=>c.id===b.dataset.id);const n=DB.students.filter(s=>s.classId===k.id).length;confirmBox(`¿Eliminar la clase <b>${esc(k.name)}</b>?${n?` Sus ${n} alumnos se conservan, quedan «sin clase».`:''}`,'Eliminar',()=>{DB.classes=DB.classes.filter(c=>c.id!==k.id);DB.students.forEach(s=>{if(s.classId===k.id)delete s.classId;});save();render();});},
+ fstuCls:b=>{const ids=DB.students.filter(s=>s.classId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
+ addStudents:()=>{const t=$('#newNames').value.split('\n').map(s=>s.trim()).filter(Boolean);const cs=$('#newNamesCls');const cid=cs?cs.value:'';t.forEach(name=>{const i=DB.students.length;const st={id:uid(),name,avatar:AVATARS[i%AVATARS.length],color:COLORS[i%COLORS.length],points:0,badges:[],missions:[],recs:0};if(cid)st.classId=cid;DB.students.push(st);});save();render();},
  cycleAv:b=>{const s=DB.students.find(x=>x.id===b.dataset.id);s.avatar=AVATARS[(AVATARS.indexOf(s.avatar)+1)%AVATARS.length];save();render();},
  cycleCol:b=>{const s=DB.students.find(x=>x.id===b.dataset.id);s.color=COLORS[(COLORS.indexOf(s.color)+1)%COLORS.length];save();render();},
  delSt:b=>{const s=DB.students.find(x=>x.id===b.dataset.id);confirmBox(`¿Eliminar a <b>${esc(s.name)}</b> y todos sus resultados?`,'Eliminar',()=>{DB.students=DB.students.filter(x=>x.id!==s.id);DB.results=DB.results.filter(r=>r.sid!==s.id);delete DB.records[s.id];DB.assignments.forEach(a=>a.studentIds=a.studentIds.filter(i=>i!==s.id));save();render();});},
@@ -1222,12 +1247,14 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(
 document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&S.form)S.form[el.dataset.f]=el.value;});
 document.addEventListener('change',e=>{
   const el=e.target;
+  if(el.dataset.scls){const s=DB.students.find(x=>x.id===el.dataset.scls);if(s){if(el.value)s.classId=el.value;else delete s.classId;save();render();}}
+  if(el.dataset.cname){const k=DB.classes.find(x=>x.id===el.dataset.cname);if(k&&el.value.trim()){k.name=el.value.trim();save();render();}}
   if(el.dataset.sname){const s=DB.students.find(x=>x.id===el.dataset.sname);if(s&&el.value.trim()){s.name=el.value.trim();save();}}
   if(el.id==='impFile'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{let inc;try{inc=JSON.parse(fr.result);if(!inc||!Array.isArray(inc.students))throw 0;}catch(_){info('Ese archivo no es una copia válida de TRAZOS.');return;}
     const m=modal(`<h3>📥 Importar copia</h3><p>La copia tiene <b>${inc.students.length}</b> alumnos, <b>${(inc.assignments||[]).length}</b> tareas y <b>${(inc.results||[]).length}</b> resultados.</p><div class="row end" style="margin-top:14px"><button class="btn ghost" data-x="no">Cancelar</button><button class="btn" data-x="merge">Combinar</button><button class="btn danger" data-x="rep">Reemplazar todo</button></div>`);
     m.querySelector('[data-x=no]').onclick=()=>m.close();
     m.querySelector('[data-x=merge]').onclick=()=>{mergeDB(inc);save();m.close();render();info('Copia combinada ✅');};
-    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
+    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.classes=DB.classes||[];DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
   };fr.readAsText(el.files[0]);el.value='';}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ptext'){S.practice.text=e.target.value;render();}});
@@ -1235,6 +1262,12 @@ document.addEventListener('gesturestart',e=>e.preventDefault());
 document.addEventListener('dblclick',e=>e.preventDefault());
 if(window.speechSynthesis)try{speechSynthesis.getVoices();speechSynthesis.onvoiceschanged=()=>{};}catch(e){}
 
+/* Pantalla completa sin barras del navegador. Solo puede activarse tras un toque (lo exige el navegador). */
+const FS_EL=document.documentElement;
+const isStandalone=()=>matchMedia('(display-mode: standalone)').matches||matchMedia('(display-mode: fullscreen)').matches||navigator.standalone;
+function enterFS(){try{const f=FS_EL.requestFullscreen||FS_EL.webkitRequestFullscreen;if(f&&!document.fullscreenElement&&!document.webkitFullscreenElement){const r=f.call(FS_EL,{navigationUI:'hide'});if(r&&r.catch)r.catch(()=>{});}}catch(e){}}
+function toggleFS(){if(document.fullscreenElement||document.webkitFullscreenElement){(document.exitFullscreen||document.webkitExitFullscreen).call(document);}else enterFS();}
+document.addEventListener('pointerup',e=>{if(e.pointerType==='touch'&&!isStandalone()&&!e.target.closest('[data-act=fs]'))enterFS();},{capture:true});
 load();render();
 /* Instalable y sin internet: registra el service worker (solo cuando se sirve por https o localhost). */
 if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol))window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
