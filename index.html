@@ -159,6 +159,21 @@ th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.
 .task{border:2px solid var(--line);border-radius:16px;padding:14px;background:#FFFCF5}
 .task.off{opacity:.55}
 .task h3{font-size:1.1rem}
+body.calm *,body.calm *::before,body.calm *::after{animation:none!important;transition:none!important}
+.memok{position:absolute;right:16px;bottom:16px;z-index:5}
+.cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}.cmp>div{text-align:center}.cmp canvas{width:100%;max-width:340px;aspect-ratio:340/300;background:#FFFDF8;border-radius:16px;box-shadow:inset 0 0 0 3px #F3EBDA;display:block;margin:6px auto 0}
+@media(max-width:600px){.cmp{grid-template-columns:1fr}}
+.retos{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:12px}
+.rbox{display:flex;flex-direction:column;align-items:center;gap:6px;text-align:center;padding:16px;border-radius:20px;border:3px solid var(--line);background:#fff;font:inherit;cursor:pointer;box-shadow:0 5px 0 rgba(30,64,120,.12)}
+.rbox .ri{font-size:3.2rem}.rbox b{font-size:1.2rem}
+.donecard{border:4px solid #22c55e!important;background:#f0fdf4!important}
+.picto{position:relative;display:inline-block}.picto .pav{position:absolute;left:-14px;bottom:-10px;width:64px;height:64px;border-radius:20px;background:#fff;border:5px solid var(--c);display:grid;place-items:center;font-size:2.4rem;box-shadow:var(--sh)}
+.picto .wave{transform-origin:130px 122px;animation:wave 1.1s ease-in-out infinite}
+@keyframes wave{0%,100%{transform:rotate(-6deg)}50%{transform:rotate(10deg)}}
+.dragst{touch-action:none;cursor:grab;user-select:none;-webkit-user-select:none;background:#fff;border-radius:12px;margin:4px 0;border:2px solid #F3EBDA}
+.dropz.over{outline:4px dashed #38bdf8;outline-offset:2px;background:#e0f2fe}
+.dropz.warn{border-color:#f59e0b;background:#fffbeb}
+.tmwarn{background:#fef3c7;border:2px solid #f59e0b;color:#92400e;border-radius:10px;padding:6px 10px;margin:8px 0;font-weight:700;font-size:.9rem}
 .prog{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
 .prog span{font-size:.8rem;font-weight:800;border-radius:999px;padding:4px 9px;background:#EFE6D2}
 .prog span.ok{background:#CDEFDD;color:#0F6B43}
@@ -278,9 +293,9 @@ const copyLine=()=>`<footer class="copy">${BRAND} by ${COMPANY} · ${COPY}</foot
 /* ------------------------------ DATOS ------------------------------ */
 const KEY='trazos_superate_v1';
 let DB, MEM_ONLY=false;
-function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,sound:true,voice:true,strict:'media',stop:2},students:[],classes:[],groups:[],assignments:[],results:[],records:{}};}
+function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,retos:true,sound:true,voice:true,strict:'media',stop:2,calm:false,voiceGuide:false,lift:true,speed:true,memSecs:3,retosMin:2},students:[],classes:[],groups:[],teams:[],assignments:[],results:[],records:{}};}
 function load(){
-  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});DB.classes=DB.classes||[];DB.groups=DB.groups||[];}
+  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});DB.classes=DB.classes||[];DB.groups=DB.groups||[];DB.teams=DB.teams||[];}
   catch(e){DB=defaultDB();MEM_ONLY=true;}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){MEM_ONLY=true;}}
@@ -412,7 +427,7 @@ const CURSIVE={
  'h':{w:40.6,s:["M-3.4 68.7 L-0.7 67.8 L1.3 66.6 L3.6 63.9 L5.9 60 L6.6 59.4 L8.7 58.4 L9.3 57.9 L9.6 57.1 L9.9 55.5 L9.9 48.7 L10.2 46.7 L11.1 45.8 L14.2 44.4 L15.5 42.8 L16.1 41.7 L16.7 37.9 L18.3 32.7 L19.3 28.3 L20 23.9 L20.2 19 L19.8 15.6 L19 13.2 L18.4 12.4 L17.6 11.9 L15.3 11.4 L13 11.8 L12.2 12.3 L11.5 13 L10.5 15.3 L10.1 18.4 L9.9 21.3 L9.9 44.9 L10.1 46.9 L9.9 48.7 L9.9 55 L9.6 57.2 L9.9 59.2 L9.9 67.2 L9.9 59.2 L9.6 57.2 L9.9 55 L9.9 48.7 L10.2 46.7 L11.1 45.8 L14.1 44.5 L15.7 42.6 L16.6 42 L22.6 41.3 L25.5 41.7 L27.3 42.5 L28.9 43.9 L30 45.9 L30.5 48.3 L30.7 51 L30.8 63.9 L31.1 66 L31.5 67.2 L32.6 68.2 L34.1 68.5 L37 68 L38.6 67"]},
  'i':{w:18.0,s:["M8.2 42.4 L8.1 62.2 L8.3 65 L8.6 66.5 L9.5 67.9 L10.2 68.3 L11.1 68.5 L13.9 68.1 L14.9 67.8 L15.9 67.1", "M8.2 26.1 L8.2 26.4"]},
  'j':{w:19.0,s:["M9.4 42.4 L9.3 86.9 L9 90.4 L8.7 92.6 L8 94.7 L6.8 96.6 L5.4 97.8 L3.8 98.4 L1.7 98.6 L-0.6 98.1 L-2 97 L-3 95.2 L-3.5 92 L-2.9 88 L-1.5 84.3 L0.5 81 L2.7 78.4 L4.8 76.5 L5.7 76 L8.3 75.3 L8.9 74.9 L9.3 74.1 L9.3 72.2 L9.8 71.5 L13.4 70.6 L17.2 68.5", "M9.3 26 L9.3 26.3"]},
- 'k':{w:33.8,s:["M-3.4 68.7 L-0.7 67.8 L1.3 66.6 L3.6 63.9 L5.9 60 L6.6 59.4 L8.7 58.4 L9.3 57.9 L9.6 57.1 L9.9 55.4 L9.9 49.5 L10.3 47.2 L11.2 46.3 L14.4 44.9 L15.3 43.7 L15.8 42.7 L16.6 38.4 L18 33.8 L19.2 29.1 L20 23.8 L20.2 19 L19.7 15 L18.8 12.9 L18.1 12.2 L17.3 11.7 L16 11.4 L14.7 11.4 L12.9 11.8 L11.7 12.8 L10.8 14.4 L10.2 16.8 L9.9 21.3 L10 45.6 L10.5 46.1 L11.4 46.2 L14.1 45.1 L15.8 43.1 L16.6 42.6 L23.1 41.5 L24.8 41.8 L25.9 42.7 L26.5 44.1 L26.7 46 L26.2 48.5 L25.5 49.9 L24.1 51.4 L22.2 52.7 L20.2 53.7 L17.5 54.5 L15.8 55.5 L13.9 55.1 L10.8 55.1 L10 55.5 L9.6 57.2 L9.9 59.2 L9.9 67.2 L9.9 59.2 L9.6 57.1 L9.9 55.6 L10.3 55.3 L10.8 55.1 L14.1 55.1 L15.2 55.4 L15.8 55.8 L16.3 56.4 L17.1 58.5 L20.5 62.9 L23.4 66.2 L25.7 67.9 L27.8 68.5 L30.5 68.1 L32.1 67.4 L33.7 65.9"]},
+ 'k':{w:33.8,s:["M-3.4 68.7 L-0.7 67.8 L1.3 66.6 L3.6 63.9 L5.9 60 L6.6 59.4 L8.7 58.4 L9.3 57.9 L9.6 57.1 L9.9 55.4 L9.9 49.5 L10.3 47.2 L11.2 46.3 L14.4 44.9 L15.3 43.7 L15.8 42.7 L16.6 38.4 L18 33.8 L19.2 29.1 L20 23.8 L20.2 19 L19.7 15 L18.8 12.9 L18.1 12.2 L17.3 11.7 L16 11.4 L14.7 11.4 L12.9 11.8 L11.7 12.8 L10.8 14.4 L10.2 16.8 L9.9 21.3 L10 45.6 L10.5 46.1 L11.4 46.2 L14.1 45.1 L15.8 43.1 L16.6 42.6 L23.1 41.5 L24.8 41.8 L25.9 42.7 L26.5 44.1 L26.7 46 L26.2 48.5 L25.5 49.9 L24.1 51.4 L22.2 52.7 L20.2 53.7 L17.5 54.5 L15.8 55.3 L13.9 55.2 L11.6 55.3 L13.4 56 L15.2 56.9 L16.3 57.6 L17.4 58.9 L20.5 62.9 L23.4 66.2 L25.7 67.9 L27.8 68.5 L30.5 68.1 L32.1 67.4 L33.7 65.9"]},
  'l':{w:23.6,s:["M-2.8 68.7 L-0.2 68 L1.4 67.3 L3.5 65.9 L5.8 63.8 L8.8 62.6 L9.5 62 L9.9 60.9 L9.9 55.4 L10.7 51.8 L11.4 50.8 L13.6 49.7 L14.4 48.9 L15.4 46.4 L16.8 42 L18.4 35.5 L19.5 29.2 L20.1 23.2 L20.1 17.9 L19.7 14.9 L19.3 13.7 L18.7 12.8 L17.9 12.1 L17.1 11.7 L15.8 11.4 L14.6 11.4 L12.7 11.9 L11.5 13.1 L10.5 15.3 L10.1 18.4 L9.9 21.3 L9.9 49.4 L10.6 51.9 L9.9 55.4 L9.8 62.3 L10.4 66.6 L10.9 67.5 L11.6 68.1 L12.5 68.5 L13.9 68.5 L16.1 68 L17.5 67.2"]},
  'm':{w:59.3,s:["M-1.3 47.5 L-0.7 45.2 L-0.2 43.9 L0.9 42.5 L2 41.9 L4 41.4 L6.2 41.7 L7.5 42.3 L8.6 43.5 L9.2 45.3 L9.6 48.3 L9.6 67.1 L9.6 48.4 L9.9 47.5 L10.5 47 L13 45.8 L15.8 43.1 L18.2 41.9 L20.7 41.4 L22.3 41.4 L24.6 41.8 L26.4 42.6 L27.4 43.4 L28.1 44.4 L29.6 47.8 L29.6 67.6 L29.6 47.9 L29.8 47.2 L30.5 46.5 L32.5 45.5 L35.2 43.2 L37.2 42.1 L38.8 41.7 L41.3 41.3 L44.4 41.7 L46.2 42.6 L47.6 43.8 L48.4 45 L49 47 L49.5 51.2 L49.5 62.8 L49.7 65.2 L50.2 67.1 L51.2 68.2 L52.6 68.5 L55.8 68 L57.3 67.1"]},
  'n':{w:40.3,s:["M-1.3 47.5 L-0.7 45.2 L-0.2 43.9 L0.9 42.5 L2 41.9 L4.1 41.4 L6.2 41.7 L7.6 42.4 L8.5 43.5 L9.2 45.3 L9.6 48.6 L9.6 67.1 L9.6 48.7 L9.9 47.8 L10.5 47.3 L12.9 46.1 L14.9 44.1 L16.2 43.1 L18.8 41.9 L20.8 41.5 L22.9 41.3 L25 41.6 L26.5 42.2 L28 43.2 L28.9 44.3 L29.6 45.7 L30 47.3 L30.4 50.9 L30.4 62.6 L30.6 65.1 L31.1 67 L31.6 67.7 L32.2 68.2 L33.8 68.5 L36.7 68 L38.3 67"]},
@@ -618,7 +633,10 @@ const SIZE_N=['Gigante','Muy grande','Grande','Mediana','Pequeña'];
 const STRICT={baja:1.5,media:1.2,alta:1.0};
 const STRICT_N={baja:'Baja',media:'Media',alta:'Alta'};
 const HELPS_N={full:'Flechas y números',start:'Solo inicio',none:'Sin ayudas'};
-const MODE_N={ball:'🔵 Con bola',free:'☝️ Sin bola'};
+const MODE_N={ball:'🔵 Con bola',free:'☝️ Sin bola',memory:'🧠 De memoria'};
+const MEM_OPTS=[[2,'2 s'],[3,'3 s'],[5,'5 s'],[8,'8 s']];
+const RMIN_OPTS=[[0,'Sin mínimo'],[1,'⭐'],[2,'⭐⭐'],[3,'⭐⭐⭐']];
+const cfgDef=()=>({lift:DB.settings.lift??true,speed:DB.settings.speed??true,voiceGuide:!!DB.settings.voiceGuide,memSecs:DB.settings.memSecs??3,retosMin:DB.settings.retosMin??2,stop:DB.settings.stop??2});
 const TRACK_U=9.5;
 const STOP_OPTS=[[1,'1 s'],[2,'2 s'],[3,'3 s'],[0,'Sin control']];
 const SYL_CONS=['m','p','l','s','t','n','d','f','r','c','g','j','b','v','ñ','ll','ch','z','y','h','k','qu','gu','x'];
@@ -657,7 +675,7 @@ function parseTextItems(t){return [...new Set(String(t||'').split(/[,;\n]+|\s{2,
 let AC=null;
 function unlockAudio(){try{if(!AC)AC=new(window.AudioContext||window.webkitAudioContext)();if(AC.state==='suspended')AC.resume();}catch(e){}}
 function tone(f,d,type='sine',v=.14,when=0){
-  if(!DB.settings.sound||!AC)return;
+  if(!DB.settings.sound||!AC||isCalm())return;
   try{const t=AC.currentTime+when;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.setValueAtTime(f,t);g.gain.setValueAtTime(v,t);g.gain.exponentialRampToValueAtTime(.001,t+d);o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d+.03);}catch(e){}
 }
 const SFX={
@@ -670,8 +688,8 @@ const SFX={
  rec:()=>[784,988,1175,1568].forEach((f,i)=>tone(f,.2,'sine',.13,.45+i*.07))
 };
 function sfx(k){SFX[k]&&SFX[k]();}
-function say(t){
-  if(!DB.settings.voice||!window.speechSynthesis)return;
+function say(t,force){
+  if((!DB.settings.voice&&!force)||!window.speechSynthesis)return;
   try{speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='es-ES';const v=speechSynthesis.getVoices().find(v=>/^es(-|_)ES/i.test(v.lang))||speechSynthesis.getVoices().find(v=>/^es/i.test(v.lang));if(v)u.voice=v;speechSynthesis.speak(u);}catch(e){}
 }
 function shade(hex,amt){const n=parseInt(hex.slice(1),16);let r=(n>>16)+amt,g=((n>>8)&255)+amt,b=(n&255)+amt;const c=v=>Math.max(0,Math.min(255,v));return '#'+((1<<24)|(c(r)<<16)|(c(g)<<8)|c(b)).toString(16).slice(1);}
@@ -688,6 +706,7 @@ class TraceEngine{
     this.ctx=this.cv.getContext('2d');
     this.si=0;this.p=0;this.done=false;this.active=null;this.wasIn=true;this.back=0;this.lastDir=0;this.flashT=-1e9;
     this.m={t0:0,t1:0,inS:0,totS:0,outs:0,dir:0,lifts:0,inval:0};this.ink=[];this.lastMoveT=0;
+    this.rec=[];this.mink=[];this.phase=cfg.mode==='memory'?'show':'trace';this.showT0=performance.now();
     this.color=cfg.color||'#FF7A30';
     this._d=e=>this.down(e);this._m=e=>this.move(e);this._u=e=>this.up(e);
     const cv=this.cv;cv.addEventListener('pointerdown',this._d);cv.addEventListener('pointermove',this._m);
@@ -695,8 +714,45 @@ class TraceEngine{
     this._t=e=>e.preventDefault();cv.addEventListener('touchstart',this._t,{passive:false});cv.addEventListener('touchmove',this._t,{passive:false});
     this.ro=new ResizeObserver(()=>this.layout());this.ro.observe(stage);
     this.layout();this.raf=requestAnimationFrame(t=>this.loop(t));
+    if(cfg.mode==='memory'){const b=document.createElement('button');b.className='btn good big memok';b.textContent='✓ ¡Listo!';b.style.display='none';
+      b.addEventListener('click',e=>{e.stopPropagation();this.memFinish();});stage.appendChild(b);this.okBtn=b;}
   }
-  destroy(){cancelAnimationFrame(this.raf);this.ro.disconnect();this.cv.remove();this.dead=true;}
+  destroy(){cancelAnimationFrame(this.raf);this.ro.disconnect();this.cv.remove();if(this.okBtn)this.okBtn.remove();this.dead=true;}
+  toU(q){return [r1((q.x-this.ox)/this.sc),r1((q.y-this.oy)/this.sc)];}
+  /* ---- Modo memoria: se ve la letra unos segundos, desaparece y se escribe sin carril ---- */
+  memDown(e){
+    if(this.done)return;e.preventDefault();
+    if(this.phase!=='write'){this.hint('👀 Espera… ¡mira bien la letra!');return;}
+    this.active=e.pointerId;try{this.cv.setPointerCapture(e.pointerId);}catch(_){}
+    this.begin();this.mink.push([this.pos(e)]);
+  }
+  memMove(e){
+    if(e.pointerId!==this.active||this.done)return;e.preventDefault();
+    const list=e.getCoalescedEvents?e.getCoalescedEvents():null;(list&&list.length?list:[e]).forEach(ev=>{const q=this.pos(ev),s=this.mink[this.mink.length-1],l=s[s.length-1];if(dist(q,l)>=2)s.push(q);});
+  }
+  memFinish(){
+    const I=this.mink.filter(s=>s.length);if(I.reduce((a,s)=>a+s.length,0)<4){this.hint('✍️ Primero escribe la letra');return;}
+    this.release();
+    const T=this.track,tol=T*.75*((STRICT[this.cfg.strict]||1.2)/1.2);
+    const bb=a=>{let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9;a.forEach(q=>{x0=Math.min(x0,q.x);y0=Math.min(y0,q.y);x1=Math.max(x1,q.x);y1=Math.max(y1,q.y);});return{cx:(x0+x1)/2,cy:(y0+y1)/2};};
+    const allM=this.strokes.flatMap((s,si)=>s.pts.map((q,i)=>({x:q.x,y:q.y,si,i})));
+    const mb=bb(allM),ib=bb(I.flat()),cl=v=>Math.max(-2*T,Math.min(2*T,v)),dx=cl(mb.cx-ib.cx),dy=cl(mb.cy-ib.cy); // tolerancia de posición
+    const J=I.map(s=>s.map(q=>({x:q.x+dx,y:q.y+dy})));
+    const near=(q,A)=>{let bd=1e18,b=null;for(const p of A){const d=(p.x-q.x)**2+(p.y-q.y)**2;if(d<bd){bd=d;b=p;}}return{p:b,d:Math.sqrt(bd)};};
+    const Ms=allM.filter((_,i)=>i%2===0),Is=J.flat().filter((_,i)=>i%2===0);
+    const cov=Ms.filter(q=>near(q,Is).d<=tol).length/Math.max(1,Ms.length);
+    let inN=0,totN=0,outs=0,dir=0;const rec=[],ink=[];const jump=T*2/this.stepPx;
+    const half=T/2;J.forEach(s=>{let was=true,run=0,pos=0,neg=0,prev=null;const r={p:[],ok:[]},k={pts:[],ok:[]};
+      s.forEach(q=>{const n=near(q,Ms),ok=n.d<=tol;totN++;if(ok)inN++;
+        if(!ok){run++;if(run===3&&was){outs++;was=false;}}else{run=0;was=true;}
+        if(ok){if(prev&&prev.si===n.p.si){const di=n.p.i-prev.i;if(Math.abs(di)<jump){if(di>0)pos+=di;else neg-=di;}}prev=n.p;}
+        r.p.push(this.toU(q));r.ok.push(n.d<=half?0:ok?1:2);k.pts.push(q);k.ok.push(ok);});
+      if(neg>pos&&neg*this.stepPx>T)dir++;rec.push(r);ink.push(k);});
+    const prec=Math.round(100*(cov+(totN?inN/totN:0))/2);
+    this.done=true;this.phase='review';this.ink=ink;this.rec=rec;if(this.okBtn)this.okBtn.style.display='none';
+    this.m.t1=performance.now();const t=Math.max(.1,(this.m.t1-this.m.t0)/1000);
+    this.hooks.onFinish&&this.hooks.onFinish({t:r1(t),prec,outs,dir,lifts:0,inval:0,speed:r1(this.lenU/t),cov:Math.round(cov*100),rec});
+  }
   get S(){return this.strokes&&this.strokes[Math.min(this.si,this.strokes.length-1)];}
   layout(){
     const W=this.stage.clientWidth,H=this.stage.clientHeight;if(!W||!H)return;
@@ -723,6 +779,7 @@ class TraceEngine{
   emit(){this.hooks.onStats&&this.hooks.onStats(this.m);}
   down(e){
     unlockAudio();
+    if(this.cfg.mode==='memory'){this.memDown(e);return;}
     if(this.done||this.active!==null)return;e.preventDefault();
     const q=this.pos(e),S=this.S;
     if(S.tap){
@@ -734,8 +791,9 @@ class TraceEngine{
     const R=ball?Math.max(this.track*.85,34):Math.max(this.track*.75,28);
     if(dist(q,cur)<=R){
       this.active=e.pointerId;try{this.cv.setPointerCapture(e.pointerId);}catch(_){}
-      this.begin();this.last=q;this.wasIn=true;this.back=0;this.lastMoveT=performance.now();this.lastMoveP=q;
-      if(!ball)this.ink.push({pts:[q],ok:[true]});else SFX.grab();
+      this.goff=ball?{x:cur.x-q.x,y:cur.y-q.y}:{x:0,y:0};const q0=ball?cur:q; // con bola se mide el centro de la bola, no el dedo
+      this.begin();this.last=q0;this.wasIn=true;this.back=0;this.lastMoveT=performance.now();this.lastMoveP=q0;
+      this.rec.push({p:[],ok:[]});if(!ball)this.ink.push({pts:[q],ok:[true]});else SFX.grab();
     }else{
       const g=nearest(S.pts,q,0,S.pts.length-1);
       if(!ball&&g.d<=this.track*.6&&Math.abs(g.i-this.p)*this.stepPx>this.track*1.2){this.begin();this.dirErr(this.p===0?'¡Empieza en el punto verde!':'¡Sigue desde donde lo dejaste!');}
@@ -744,9 +802,10 @@ class TraceEngine{
     }
   }
   move(e){
+    if(this.cfg.mode==='memory'){this.memMove(e);return;}
     if(e.pointerId!==this.active)return;e.preventDefault();
     const list=e.getCoalescedEvents?e.getCoalescedEvents():null;const evs=list&&list.length?list:[e];
-    for(const ev of evs){if(this.active===null||this.done)break;const q=this.pos(ev);if(dist(q,this.lastMoveP)>=3){this.lastMoveP=q;this.lastMoveT=performance.now();}this.feed(q);}
+    for(const ev of evs){if(this.active===null||this.done)break;const q0=this.pos(ev),g=this.goff||{x:0,y:0},q={x:q0.x+g.x,y:q0.y+g.y};if(dist(q,this.lastMoveP)>=3){this.lastMoveP=q;this.lastMoveT=performance.now();}this.feed(q);}
   }
   feed(q){
     const last=this.last;const n=Math.max(1,Math.ceil(dist(last,q)/(this.track/4)));let prev=last;
@@ -761,6 +820,7 @@ class TraceEngine{
     const w=(f.d<=b.d+this.track*.25)?f:b;
     this.m.totS++;if(w.d<=half)this.m.inS++;
     const ok=w.d<=tol;
+    const rs=this.rec[this.rec.length-1];if(rs){rs.p.push(this.toU(r));rs.ok.push(w.d<=half?0:ok?1:2);}
     if(this.cfg.mode==='free'){const s=this.ink[this.ink.length-1];if(s){s.pts.push(r);s.ok.push(ok);}}
     if(ok){
       const ml=Math.hypot(mv.x,mv.y);
@@ -782,11 +842,12 @@ class TraceEngine{
   }
   dirErr(msg){const now=performance.now();if(now-this.lastDir<800)return;this.lastDir=now;this.m.dir++;SFX.dir();this.hint(msg,'bad');this.flashT=now;this.emit();}
   release(){if(this.active!==null){try{this.cv.releasePointerCapture(this.active);}catch(_){}}this.active=null;}
-  up(e){if(e.pointerId!==this.active)return;this.release();if(!this.done)this.invalidate('lift');}
+  up(e){if(e.pointerId!==this.active)return;this.release();if(this.cfg.mode==='memory'||this.done)return;
+    if(this.cfg.lift===false){this.m.lifts++;this.hint(this.cfg.mode==='ball'?'Vuelve a coger la bola':'Sigue desde el punto verde','warn');}else this.invalidate('lift');}
   /* Levantar el dedo a mitad de un trazo o quedarse parado: el intento no vale y se empieza de nuevo. */
   invalidate(kind){
     const iv=this.m.inval+1;this.release();
-    this.si=0;this.p=0;this.back=0;this.wasIn=true;this.ink=[];
+    this.si=0;this.p=0;this.back=0;this.wasIn=true;this.ink=[];this.rec=[];
     this.m={t0:0,t1:0,inS:0,totS:0,outs:0,dir:0,lifts:0,inval:iv};
     SFX.dir();try{navigator.vibrate&&navigator.vibrate([80,60,80]);}catch(_){}
     this.flashT=performance.now();
@@ -802,10 +863,11 @@ class TraceEngine{
     this.done=true;this.m.t1=performance.now();
     const t=Math.max(.1,(this.m.t1-this.m.t0)/1000);const prec=this.m.totS?Math.round(this.m.inS/this.m.totS*100):100;
     this.emit();
-    this.hooks.onFinish&&this.hooks.onFinish({t:r1(t),prec,outs:this.m.outs,dir:this.m.dir,lifts:this.m.lifts,inval:this.m.inval,speed:r1(this.lenU/t)});
+    this.hooks.onFinish&&this.hooks.onFinish({t:r1(t),prec,outs:this.m.outs,dir:this.m.dir,lifts:this.m.lifts,inval:this.m.inval,speed:r1(this.lenU/t),rec:this.rec});
   }
   loop(ts){if(this.dead)return;
-    const stop=+this.cfg.stop;if(stop>0&&this.active!==null&&!this.done&&performance.now()-this.lastMoveT>stop*1000)this.invalidate('stop');
+    if(this.phase==='show'&&performance.now()-this.showT0>(+this.cfg.memSecs||3)*1000){this.phase='write';if(this.okBtn)this.okBtn.style.display='';this.hint('🧠 ¡Ahora tú! Escríbela de memoria','good');this.hooks.onWrite&&this.hooks.onWrite();}
+    const stop=+this.cfg.stop;if(stop>0&&this.cfg.mode!=='memory'&&this.active!==null&&!this.done&&performance.now()-this.lastMoveT>stop*1000)this.invalidate('stop');
     this.draw(ts);this.raf=requestAnimationFrame(t=>this.loop(t));}
   badge(q,num,color,r,strong){const c=this.ctx;c.beginPath();c.arc(q.x,q.y,r,0,PI2);c.fillStyle=color;c.fill();if(strong){c.lineWidth=3;c.strokeStyle='#fff';c.stroke();}if(num!=null){c.fillStyle='#fff';c.font=`900 ${Math.round(r*1.15)}px ui-rounded,system-ui,sans-serif`;c.textAlign='center';c.textBaseline='middle';c.fillText(String(num),q.x,q.y+1);}}
   draw(ts){
@@ -823,6 +885,8 @@ class TraceEngine{
     }
     c.lineCap='round';c.lineJoin='round';
     const poly=(pts,a=0,b=pts.length-1)=>{c.beginPath();c.moveTo(pts[a].x,pts[a].y);for(let i=a+1;i<=b;i++)c.lineTo(pts[i].x,pts[i].y);if(a===b)c.lineTo(pts[a].x+.01,pts[a].y);};
+    if(this.phase==='write'){c.lineWidth=Math.max(5,T*.2);c.strokeStyle=c.fillStyle='#23304F';
+      this.mink.forEach(s=>{if(s.length<2){c.beginPath();c.arc(s[0].x,s[0].y,c.lineWidth/2,0,PI2);c.fill();return;}poly(s);c.stroke();});return;}
     const border=Math.max(3,T*.09);
     c.strokeStyle='#2F3E8F';c.lineWidth=T;this.strokes.forEach(S=>{poly(S.pts);c.stroke();});
     c.strokeStyle='#FFFFFF';c.lineWidth=T-2*border;this.strokes.forEach(S=>{poly(S.pts);c.stroke();});
@@ -844,6 +908,10 @@ class TraceEngine{
       }
     }
     if(this.ink.length){c.lineWidth=Math.max(5,T*.2);this.ink.forEach(s=>{for(let i=1;i<s.pts.length;i++){c.strokeStyle=s.ok[i]?'#23304F':'#E5484D';c.beginPath();c.moveTo(s.pts[i-1].x,s.pts[i-1].y);c.lineTo(s.pts[i].x,s.pts[i].y);c.stroke();}});}
+    if(this.phase==='show'){const ms=(+cfg.memSecs||3)*1000,el=performance.now()-this.showT0;const tot=this.strokes.reduce((a,s2)=>a+s2.pts.length,0);
+      let k=Math.floor(Math.min(1,el/(ms*.85))*(tot-1)),q=null;for(const s2 of this.strokes){if(k<s2.pts.length){q=s2.pts[k];break;}k-=s2.pts.length;}
+      if(q){const R=Math.max(12,T*.38);c.beginPath();c.arc(q.x,q.y,R,0,PI2);c.fillStyle=this.color;c.fill();c.lineWidth=3;c.strokeStyle='#fff';c.stroke();}
+      c.font='900 26px Fredoka,ui-rounded,sans-serif';c.textAlign='left';c.textBaseline='bottom';c.fillStyle='#2F3E8F';c.fillText('👀 ¡Mira bien! '+Math.max(1,Math.ceil((ms-el)/1000)),20,this.H-14);}
     if(cfg.mode==='ball'&&(!S.tap||this.done)){
       const q=this.done?S.pts[S.pts.length-1]:S.pts[this.p];
       const idle=this.active===null&&!this.done;const pul=idle?(Math.sin(ts/220)*.08+1.05):1;
@@ -887,13 +955,13 @@ function studentStats(sid){
 }
 function checkBadges(st){const s=studentStats(st.id);st.badges=st.badges||[];const nb=[];BADGES.forEach(b=>{if(!st.badges.includes(b.id)&&b.t(s,st)){st.badges.push(b.id);nb.push(b);}});return nb;}
 function levelOf(p){const l=Math.floor((p||0)/150);return{n:l+1,name:LEVELS[Math.min(l,LEVELS.length-1)],next:(l+1)*150};}
-function starsFor(r){if(r.prec>=90&&r.outs===0&&r.dir===0)return 3;if(r.prec>=75&&r.outs<=2&&r.dir<=1)return 2;return 1;}
+function starsFor(r){let s=(r.prec>=90&&r.outs===0&&r.dir===0)?3:(r.prec>=75&&r.outs<=2&&r.dir<=1)?2:1;if(r.cov!=null){if(r.cov<60)s=1;else if(r.cov<80)s=Math.min(s,2);}return s;}
 function recKey(set,style,key,cfg){return `${set}|${styleOf(set,style)||''}|${key}|${cfg.mode}|${cfg.size}`;}
 function checkRecord(st,set,style,key,cfg,res){
   const R=DB.records[st.id]||(DB.records[st.id]={});const k=recKey(set,style,key,cfg);const o=R[k];
   if(!o){R[k]={t:res.t,prec:res.prec};return null;}
   const msg=[];
-  if(res.stars>=2&&res.t<o.t){msg.push(`⏱️ ¡Más rápido que nunca! Antes ${fmt(o.t)} s`);o.t=res.t;}
+  if(cfg.speed!==false&&res.stars>=2&&res.t<o.t){msg.push(`⏱️ ¡Más rápido que nunca! Antes ${fmt(o.t)} s`);o.t=res.t;}
   if(res.prec>o.prec){msg.push(`🎯 ¡Más preciso que nunca! Antes ${o.prec}%`);o.prec=res.prec;}
   return msg.length?msg:null;
 }
@@ -902,7 +970,7 @@ function aProgress(a,sid){
   let done=0,itemsDone=0;const reps=a.cfg.reps;a.items.forEach(k=>{const c=Math.min(cnt[k]||0,reps);done+=c;if(c>=reps)itemsDone++;});
   const tot=a.items.length*reps;return{done,tot,pct:tot?Math.round(done/tot*100):0,itemsDone,cnt};
 }
-function confetti(n){const box=document.createElement('div');box.className='confetti';for(let i=0;i<n*22;i++){const s=document.createElement('i');s.style.left=Math.random()*100+'%';s.style.background=COLORS[i%COLORS.length];s.style.animationDelay=Math.random()*.35+'s';s.style.animationDuration=(1.3+Math.random()*1.1)+'s';box.appendChild(s);}document.body.appendChild(box);setTimeout(()=>box.remove(),3000);}
+function confetti(n){if(isCalm())return;const box=document.createElement('div');box.className='confetti';for(let i=0;i<n*22;i++){const s=document.createElement('i');s.style.left=Math.random()*100+'%';s.style.background=COLORS[i%COLORS.length];s.style.animationDelay=Math.random()*.35+'s';s.style.animationDuration=(1.3+Math.random()*1.1)+'s';box.appendChild(s);}document.body.appendChild(box);setTimeout(()=>box.remove(),3000);}
 
 /* ============================== ESTADO UI ============================== */
 const S={screen:'home',sid:null,ttab:'alumnos',rsid:null,form:null,session:null,engine:null,timerIv:null,autoT:null,
@@ -917,25 +985,34 @@ const inCls=s=>{const c=curCls();return !c||(c==='_none'?!s.classId:s.classId===
 const visStudents=()=>DB.students.filter(inCls);
 /* ---- Grupos de tableta: qué alumnos salen en ESTA tableta (pueden ser de varias clases).
    La elección se guarda solo en este dispositivo y no viaja en las copias. ---- */
-/* Memoria por clase: cada clase recuerda en esta tableta su último grupo elegido
-   (p. ej. 1.º B → Tableta 1). Si otra clase usa la tableta, al volver a 1.º B sale otra vez Tableta 1. */
-const DEVKEY='trazos_grupo_por_clase';
-const grpMem=()=>{try{return JSON.parse(localStorage.getItem(DEVKEY)||'{}')||{};}catch(e){return {};}};
-const devGroup=()=>{const g=grpMem()[curCls()||'_all'];return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';};
-const setDevGroup=g=>{try{const m=grpMem();if(g)m[curCls()||'_all']=g;else delete m[curCls()||'_all'];localStorage.setItem(DEVKEY,JSON.stringify(m));}catch(e){}};
+/* Pantalla de inicio: Clase – Equipo. Cada clase recuerda en ESTE dispositivo su último equipo elegido
+   (p. ej. 1.º B → Equipo 1). Si otra clase usa la tableta, al volver a 1.º B sale otra vez Equipo 1. No viaja en las copias. */
+const DEVKEY='trazos_equipo_por_clase';
+const tmMem=()=>{try{return JSON.parse(localStorage.getItem(DEVKEY)||'{}')||{};}catch(e){return {};}};
+const devTeam=()=>{const c=curCls();if(!c||c==='_none')return '';const t=tmMem()[c];return t&&(DB.teams||[]).some(x=>x.id===t&&x.classId===c)?t:'';};
+const setDevTeam=t=>{const c=curCls();if(!c||c==='_none')return;try{const m=tmMem();if(t)m[c]=t;else delete m[c];localStorage.setItem(DEVKEY,JSON.stringify(m));}catch(e){}};
+function teamBar(){
+  const c=curCls();if(!c||c==='_none')return '';const T=(DB.teams||[]).filter(t=>t.classId===c);if(!T.length)return '';const dt=devTeam();
+  return `<div class="seg">${[['','👥 Todos'],...T.map(t=>[t.id,'🤝 '+esc(t.name)])].map(([id,n])=>`<button class="${dt===id?'on':''}" data-act="devTeam" data-v="${id}">${n}</button>`).join('')}</div>`;
+}
+const DEVKEY2='trazos_grupo_por_clase'; // dispositivo elegido por clase (misma clave que antes: se conserva lo ya elegido)
+const dvMem=()=>{try{return JSON.parse(localStorage.getItem(DEVKEY2)||'{}')||{};}catch(e){return {};}};
+const devGroup=()=>{const g=dvMem()[curCls()||'_all'];return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';};
+const setDevGroup=g=>{try{const m=dvMem();if(g)m[curCls()||'_all']=g;else delete m[curCls()||'_all'];localStorage.setItem(DEVKEY2,JSON.stringify(m));}catch(e){}};
 function grpBar(){
   const G=DB.groups||[];if(!G.length)return '';const c=curCls(),dg=devGroup();
   const vis=G.filter(g=>!c||DB.students.some(s=>s.groupId===g.id&&inCls(s)));if(!vis.length)return '';
-  return `<div class="seg clsbar">${[['','👥 Todos'],...vis.map(g=>[g.id,'📱 '+esc(g.name)])].map(([id,n])=>`<button class="${dg===id?'on':''}" data-act="devGroup" data-v="${id}">${n}</button>`).join('')}</div>`;
+  return `<div class="seg">${[['','👥 Todos'],...vis.map(g=>[g.id,'📱 '+esc(g.name)])].map(([id,n])=>`<button class="${dg===id?'on':''}" data-act="devGroup" data-v="${id}">${n}</button>`).join('')}</div>`;
 }
 const grpName=id=>((DB.groups||[]).find(g=>g.id===id)||{}).name||'';
-const homeStudents=()=>{const g=devGroup();return visStudents().filter(s=>!g||s.groupId===g);};
+const homeStudents=()=>{const t=devTeam(),g=devGroup();return visStudents().filter(s=>(!t||s.teamId===t)&&(!g||s.groupId===g));};
 function clsBar(){
   if(!DB.classes.length)return '';const c=curCls();const none=DB.students.some(s=>!s.classId);
   return `<div class="seg clsbar">${[['','👥 Todas'],...DB.classes.map(k=>[k.id,'🏫 '+esc(k.name)]),...(none?[['_none','Sin clase']]:[])].map(([id,n])=>`<button class="${c===id?'on':''}" data-act="cls" data-v="${id}">${n}</button>`).join('')}</div>`;
 }
 function go(screen){stopPlay();S.screen=screen;render();window.scrollTo(0,0);}
-function render(){({home:renderHome,student:renderStudent,teacher:renderTeacher,play:renderPlay})[S.screen]();}
+function isCalm(){const a=(student()||{}).adapt||{};return a.calm!=null?!!a.calm:!!DB.settings.calm;}
+function render(){document.body.classList.toggle('calm',isCalm());({home:renderHome,student:renderStudent,teacher:renderTeacher,play:renderPlay,reto:renderReto})[S.screen]();}
 
 /* Modales propios (los alert/confirm del navegador pueden estar bloqueados) */
 function modal(html){const m=document.createElement('div');m.className='modal';m.innerHTML=`<div class="mcard">${html}</div>`;document.body.appendChild(m);m.addEventListener('click',e=>{if(e.target===m)m.remove();});m.close=()=>m.remove();return m;}
@@ -961,27 +1038,33 @@ function downloadFallback(name,text,mime){
 
 /* ================================ INICIO ================================ */
 function renderHome(){
-  const st=homeStudents();const dg=devGroup();
+  const st=homeStudents();const dg=devTeam(),dv=devGroup();
   app.innerHTML=`<div class="wrap">
    <header class="hero"><div class="logo">✍️</div><div class="grow">${kidLogo()}<p class="tag">¡Supérate! Tú puedes 💪</p></div><button class="btn ghost" data-act="fs" title="Pantalla completa">⛶</button><button class="btn ghost" data-act="teacher">⚙️ Docente</button></header>
    ${MEM_ONLY?'<div class="warn">⚠️ Este navegador no permite guardar datos. Lo que se haga se perderá al cerrar. Exporta la copia desde Docente.</div>':''}
-   <div class="card"><h2>¿Quién va a escribir?${(curCls()&&curCls()!=='_none')||dg?` <span class="stat" style="font-size:.9rem;margin-left:8px">${[curCls()&&curCls()!=='_none'?'🏫 '+esc(clsName(curCls())):'',dg?'📱 '+esc(grpName(dg)):''].filter(Boolean).join(' · ')}</span>`:''}</h2>${DB.classes.length?`<div class="row" style="margin-top:10px"><b class="muted" style="min-width:60px">Clase</b>${clsBar().replace('seg clsbar','seg')}</div>`:''}${grpBar()?`<div class="row" style="margin-top:8px"><b class="muted" style="min-width:60px">Grupo</b>${grpBar().replace('seg clsbar','seg')}</div>`:''}
+   <div class="card"><h2>¿Quién va a escribir?${(curCls()&&curCls()!=='_none')||dg||dv?` <span class="stat" style="font-size:.9rem;margin-left:8px">${[curCls()&&curCls()!=='_none'?'🏫 '+esc(clsName(curCls())):'',dv?'📱 '+esc(grpName(dv)):'',dg?'🤝 '+esc(teamName(dg)):''].filter(Boolean).join(' · ')}</span>`:''}</h2>${DB.classes.length?`<div class="row" style="margin-top:10px"><b class="muted" style="min-width:60px">Clase</b>${clsBar().replace('seg clsbar','seg')}</div>`:''}${grpBar()?`<div class="row" style="margin-top:8px"><b class="muted" style="min-width:60px">Dispositivo</b>${grpBar()}</div>`:''}${teamBar()?`<div class="row" style="margin-top:8px"><b class="muted" style="min-width:60px">Equipo</b>${teamBar()}</div>`:''}
     ${st.length?`<div class="avatars">${st.map(s=>`<button class="av" data-act="pick" data-id="${s.id}" style="--c:${s.color}"><span class="emo">${s.avatar}</span><span class="nm">${esc(s.name)}</span><span class="pts">⭐ ${studentStats(s.id).stars} · Nv ${levelOf(s.points).n}</span></button>`).join('')}</div>`
-      :DB.students.length?`<p class="muted">${dg?'No hay alumnos de este grupo en esta clase.':'No hay alumnos en esta clase.'}</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
+      :DB.students.length?`<p class="muted">${dg||dv?'No hay alumnos con esta selección.':'No hay alumnos en esta clase.'}</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
     <div class="row" style="margin-top:16px"><button class="btn ghost" data-act="guest">👀 Practicar como invitado</button><span class="muted small">El invitado no guarda resultados.</span></div>
    </div></div>${copyLine()}`;
 }
 
 /* ============================ ZONA DEL ALUMNO ============================ */
+function pendingFor(sid){return DB.assignments.filter(a=>a.active&&a.studentIds.includes(sid));}
 function renderStudent(){
   const st=student();const guest=!st;const s=st?studentStats(st.id):null;const lv=st?levelOf(st.points):null;
   const P=S.practice;
   const mis=st?DB.assignments.filter(a=>a.active&&a.studentIds.includes(st.id)):[];
+  const pend=mis;const incompl=st?mis.filter(a=>aProgress(a,st.id).pct<100):[];const allDone=!!(st&&mis.length&&!incompl.length);
+  if(allDone&&S.doneSaid!==st.id){S.doneSaid=st.id;setTimeout(()=>say(`¡Muy bien, ${st.name}! Levanta la mano y llama a tu maestro.`),300);}else if(!allDone)S.doneSaid=null;
+  const doneCard=allDone?`<div class="card donecard"><div class="row" style="justify-content:center;gap:26px">${pictoHand(st)}<div style="max-width:440px"><h2 style="font-size:2rem">¡Tarea superada, ${esc(st.name)}! 🎉</h2><p style="font-size:1.35rem;font-weight:900;margin:8px 0">✋ Levanta la mano y llama a tu maestro/a.</p><p class="muted">Mientras esperas, puedes repetir tu tarea${retosOK(st)?' o jugar a un reto':''}.</p>${DB.settings.retos!==false&&!retosOK(st)?(()=>{const g=mis.filter(a=>taskStars(a,st.id)<retosMinOf(a));const mn=Math.max(...g.map(retosMinOf));const av=Math.min(...g.map(a=>taskStars(a,st.id)));return `<div class="tmwarn" style="background:#eef2ff;border-color:#818cf8;color:#3730a3">🔒 Para jugar a los retos necesitas ${'⭐'.repeat(mn)} de media. Ahora tienes ${fmt(av)} ⭐. ¡Repite tu tarea y mejora!</div>`;})():''}<div class="row" style="margin-top:12px"><button class="btn big" data-act="${mis.length===1?'mission':'goMis'}" data-id="${mis[0].id}">↺ Repetir mi tarea</button>${retosOK(st)?'<button class="btn acc big" data-act="goRetos">🏁 Retos</button>':''}</div></div></div></div>`:'';
   const misHTML=mis.length?`<div class="missions">${mis.map(a=>{const pr=aProgress(a,st.id);const prev=a.items.slice(0,8).map(k=>previewSVG(getItem(a.set,a.style,k))).join('');
     return `<div class="mcardx ${pr.pct>=100?'done':''}"><h3>${ACTIVITIES[a.activity]?.icon||'✍️'} ${esc(a.title)}</h3><div class="muted small">${esc(setLabel(a.set,a.style))} · ${MODE_N[a.cfg.mode]} · ${SIZE_N[a.cfg.size-1]} · ${a.cfg.reps} rep.</div><div class="mprev">${prev}${a.items.length>8?`<span class="muted">+${a.items.length-8}</span>`:''}</div><div class="bar"><i style="width:${pr.pct}%"></i></div><div class="row"><b class="grow">${pr.pct>=100?'✅ ¡Completada!':pr.itemsDone+' / '+a.items.length+' hechos'}</b><button class="btn ${pr.pct>=100?'ghost':'acc'}" data-act="mission" data-id="${a.id}">${pr.pct>=100?'Repasar':'¡Vamos!'}</button></div></div>`;}).join('')}</div>`
     :`<p class="muted">No tienes misiones ahora mismo.${DB.settings.freePlay?' ¡Practica libremente abajo!':''}</p>`;
   let practice='';
-  if(guest||DB.settings.freePlay){
+  if(allDone){practice='';}
+  else if(pend.length){practice=`<div class="card"><h2>🔒 Práctica libre</h2><p class="muted">Ahora toca trabajar tu${pend.length>1?'s misiones':' misión'}. ¡Puedes repetirla${pend.length>1?'s':''} para mejorar! 💪</p></div>`;}
+  else if(guest||DB.settings.freePlay){
     const RS=realSet(P.set,P.style);const keys=P.set==='text'?parseTextItems(P.text):SETS[RS].keys();
     const R=st?(DB.records[st.id]||{}):{};
     practice=`<div class="card"><h2>🎨 Práctica libre</h2>
@@ -1002,7 +1085,8 @@ function renderStudent(){
     <div class="grow"><h1 style="font-size:1.8rem">${st?'¡Hola, '+esc(st.name)+'!':'Invitado'}</h1><div class="tag">¡Supérate! Tú puedes 💪</div></div>
     ${st?`<span class="stat">⭐ ${s.stars}</span><span class="stat">✍️ ${s.count}</span><span class="stat lvl">Nv ${lv.n} · ${lv.name}</span>`:''}
    </div>
-   ${st?`<div class="card"><h2>🎯 Mis misiones</h2>${misHTML}</div>`:''}
+   ${doneCard}${st?`<div class="card" id="misiones"><h2>🎯 Mis misiones</h2>${misHTML}</div>`:''}
+   ${retosOK(st)?retosCard(st):''}
    ${practice}
    ${st?`<div class="card"><h2>🏅 Mis medallas</h2><div class="badges">${BADGES.map(b=>`<div class="bdg ${(st.badges||[]).includes(b.id)?'':'off'}"><b>${b.i}</b><span>${b.n}</span></div>`).join('')}</div>
     <div style="margin-top:12px"><div class="row small"><b class="grow">Puntos: ${st.points||0}</b><span class="muted">Siguiente nivel: ${lv.next}</span></div><div class="bar"><i style="width:${Math.round(((st.points||0)%150)/150*100)}%"></i></div></div></div>`:''}
@@ -1011,7 +1095,9 @@ function renderStudent(){
 
 /* ============================== JUEGO ============================== */
 function startSession(o){
-  S.session=Object.assign({idx:0,rep:0,runs:[]},o,{cfg:Object.assign({mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true,stop:DB.settings.stop??2},o.cfg)});
+  const cfg=Object.assign({mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true},cfgDef(),o.cfg);
+  const ad=(student()||{}).adapt||{};['stop','lift','speed','voiceGuide','memSecs'].forEach(k=>{if(ad[k]!=null)cfg[k]=ad[k];});
+  S.session=Object.assign({idx:0,rep:0,runs:[]},o,{cfg});
   S.screen='play';render();
 }
 function repStartFor(ss){if(!ss.aid||!S.sid)return 0;const a=DB.assignments.find(x=>x.id===ss.aid);if(!a)return 0;const c=aProgress(a,S.sid).cnt[ss.items[ss.idx]]||0;return c>=ss.cfg.reps?0:c;}
@@ -1028,7 +1114,7 @@ function renderPlay(){
    <header class="pbar"><button class="ibtn" data-act="quit" aria-label="Salir">✕</button>
     <div class="ptitle"><span class="pset">${esc(ss.title||setLabel(ss.set,ss.style))}${ss.items.length>1?` · ${ss.idx+1}/${ss.items.length}`:''}</span><b>${esc(it.label)}</b></div>
     <div class="reps" title="Repeticiones">${[...Array(reps)].map((_,i)=>`<i class="${i<ss.rep?'d':i===ss.rep?'c':''}"></i>`).join('')}</div>
-    <div class="pmeta"><span class="timer" id="timer">0,0 s</span>${rec?`<span class="rec">🏁 Récord ${fmt(rec.t)} s · ${rec.prec}%</span>`:'<span class="rec">¡Primer intento!</span>'}</div>
+    <div class="pmeta">${cfg.speed!==false?'<span class="timer" id="timer">0,0 s</span>':''}${rec?`<span class="rec">🏁 Récord ${cfg.speed!==false?fmt(rec.t)+' s · ':''}${rec.prec}%</span>`:'<span class="rec">¡Primer intento!</span>'}</div>
    </header>
    <div class="stage" id="stage"><div class="toast" id="toast"></div></div>
    <footer class="pfoot"><span class="chip">🎯 <b id="mPrec">100</b>%</span><span class="chip">🚧 Salidas <b id="mOut">0</b></span><span class="chip">↩️ Dirección <b id="mDir">0</b></span><span class="chip sz">${MODE_N[cfg.mode]} · ${cfg.size} ${SIZE_N[cfg.size-1]}</span><span class="grow"></span><button class="ibtn" data-act="restart" title="Empezar de nuevo">↺</button></footer>
@@ -1038,19 +1124,80 @@ function renderPlay(){
     onHint:(m,k)=>toast(m,k),
     onInvalid:()=>{const st=$('#stage');if(st){st.classList.remove('shake');void st.offsetWidth;st.classList.add('shake');}},
     onStats:m=>{const p=$('#mPrec');if(!p)return;p.textContent=m.totS?Math.round(m.inS/m.totS*100):100;$('#mOut').textContent=m.outs;$('#mDir').textContent=m.dir;},
-    onFinish:res=>onFinish(res)
+    onFinish:res=>onFinish(res),
+    onWrite:()=>{if(cfg.voiceGuide)say('¡Ahora tú! Escríbela de memoria.',true);}
   });
   S.timerIv=setInterval(()=>{const e=S.engine,t=$('#timer');if(!e||!t)return;const v=e.m.t0?((e.done?e.m.t1:performance.now())-e.m.t0)/1000:0;t.textContent=fmt(v)+' s';},100);
-  if(ss.rep===0&&!ss.announced){ss.announced=true;toast(cfg.mode==='ball'?'Arrastra la bola por el camino':'Traza con el dedo desde el punto verde','good');}
+  if(ss.rep===0&&!ss.announced){ss.announced=true;toast(cfg.mode==='ball'?'Arrastra la bola por el camino':cfg.mode==='memory'?'👀 Mira bien… ¡luego la escribirás de memoria!':'Traza con el dedo desde el punto verde','good');}
+  if(cfg.voiceGuide&&(cfg.mode==='memory'||ss.guided!==ss.idx)){ss.guided=ss.idx;setTimeout(()=>say(guideText(ss,key,it,cfg),true),250);}
+}
+/* Guía verbal automática: describe cada trazo con palabras sencillas a partir del recorrido */
+function strokeWords(d){
+  const pts=samplePath(d,1.5).pts;if(pts.length<3)return ['toca el punto'];
+  const W=[];let ax=0,ay=0,last=null;
+  for(let i=1;i<pts.length;i++){ax+=pts[i].x-pts[i-1].x;ay+=pts[i].y-pts[i-1].y;if(Math.hypot(ax,ay)>=7){
+    const w=Math.abs(ax)>Math.abs(ay)*1.3?(ax>0?0:2):(ay>0?1:3);if(w!==last){W.push(w);last=w;}ax=ay=0;}}
+  const N=['a la derecha','baja','a la izquierda','sube'],out=[];
+  for(let i=0;i<W.length;){let j=i,sg=0;while(j+1<W.length){const st=((W[j+1]-W[j])+4)%4;const g=st===1?1:st===3?-1:0;if(!g||(sg&&g!==sg))break;sg=g;j++;}
+    if(j-i>=3){out.push('da la vuelta');i=j+1;}else{out.push(N[W[i]]);i++;}}
+  const o2=out.filter((w,i)=>w!==out[i-1]);return o2.length>7?o2.slice(0,6).concat('y sigue el camino'):o2;
+}
+function guideText(ss,key,it,cfg){
+  const pre=cfg.mode==='memory'?'Mira bien. ':'';
+  if(ss.set==='grafo')return pre+'Sigue el camino desde el punto verde, sin salirte.';
+  if(ss.set==='text'&&String(key).length>1)return pre+`Vamos a escribir: ${key}.`;
+  return pre+'Empieza en el punto verde: '+it.strokes.map((s,i)=>(i?'Después levanta el dedo y ':'')+strokeWords(s.d).join(', ')).join('. ')+'.';
+}
+const SYL_SND={c:'ca, co, cu',g:'ga, go, gu',q:'que, qui',k:'ka, ki',h:'la hache no suena',x:'xa, xe, xi',w:'wa, we',y:'ya, ye, yo',ñ:'ña, ñe, ño'};
+function letterSound(ss,key){
+  if(ss.set==='grafo')return '';const k=String(key);if(ss.set==='digits'||ss.set==='text'||k.length>1)return k;
+  const l=k.toLowerCase();if('aeiouáéíóú'.includes(l))return l;return SYL_SND[l]||`${l}a, ${l}e, ${l}i, ${l}o, ${l}u`;
+}
+/* «Ver mi trazo»: el modelo animado al lado del trazo del alumno (verde dentro, rojo fuera) */
+function showTrace(){
+  const ss=S.session;if(!ss)return;const it=getItem(ss.set,ss.style,ss.items[ss.idx]);const rec=ss.lastRec||[];
+  const m=modal(`<h3>👀 Ver mi trazo</h3><div class="cmp"><div><b>Así se hace</b><canvas id="cvM"></canvas></div><div><b>Así lo he hecho yo</b><canvas id="cvI"></canvas></div></div>
+    <p class="muted small">${rec.length?'<b style="color:#16a34a">Verde</b>: por dentro del camino · <b style="color:#F59E0B">naranja</b>: rozando el borde · <b style="color:#E5484D">rojo</b>: fuera.'+(ss.cfg.mode==='ball'?' Con bola se muestra el recorrido de la bola según movías el dedo.':''):'No hay trazo guardado de este intento.'}</p><div class="row end"><button class="btn good" data-x="ok">Vale</button></div>`);
+  m.querySelector('.mcard').style.maxWidth='780px';m.querySelector('[data-x=ok]').onclick=()=>m.close();
+  const b=it.box,bw=b.x1-b.x0,bh=b.y1-b.y0;
+  const setup=cv=>{const d=Math.min(window.devicePixelRatio||1,2),W=340,H=300;cv.width=W*d;cv.height=H*d;const k=Math.min((W-30)/bw,(H-30)/bh);
+    return{c:cv.getContext('2d'),d,W,H,k,T:[d*k,0,0,d*k,d*((W-bw*k)/2-b.x0*k),d*((H-bh*k)/2-b.y0*k)]};};
+  const lane=g=>{const c=g.c;c.setTransform(g.d,0,0,g.d,0,0);c.clearRect(0,0,g.W,g.H);c.setTransform(...g.T);c.lineCap='round';c.lineJoin='round';
+    (it.guides||[]).forEach(u=>{c.beginPath();c.moveTo(b.x0-60,u);c.lineTo(b.x1+60,u);c.lineWidth=1.2/g.k;c.strokeStyle=u===70?'rgba(229,72,77,.5)':'rgba(47,62,143,.25)';c.stroke();});
+    it.strokes.forEach(s=>{const p=new Path2D(s.d);c.lineWidth=TRACK_U;c.strokeStyle='#2F3E8F';c.stroke(p);c.lineWidth=TRACK_U*.8;c.strokeStyle='#fff';c.stroke(p);});};
+  const gM=setup(m.querySelector('#cvM')),gI=setup(m.querySelector('#cvI'));
+  const MP=it.strokes.map(s=>samplePath(s.d,.8).pts);const mTot=MP.reduce((a,s)=>a+s.length,0);const iTot=rec.reduce((a,s)=>a+s.p.length,0);
+  const col=student()?student().color:'#FF7A30';const DUR=3200,HOLD=1400;let t0=performance.now();
+  const frame=now=>{if(!document.body.contains(m))return;let f=((now-t0)%(DUR+HOLD))/DUR;f=Math.min(1,f);
+    lane(gM);let k=Math.floor(f*(mTot-1));const c=gM.c;c.lineWidth=TRACK_U*.45;c.strokeStyle=col;c.globalAlpha=.7;let ball=null;
+    for(const s of MP){const n=Math.min(s.length,k+1);if(n>1){c.beginPath();c.moveTo(s[0].x,s[0].y);for(let i=1;i<n;i++)c.lineTo(s[i].x,s[i].y);c.stroke();}if(k<s.length){ball=s[Math.max(0,k)];break;}k-=s.length;}
+    c.globalAlpha=1;if(ball&&f<1){c.beginPath();c.arc(ball.x,ball.y,TRACK_U*.42,0,PI2);c.fillStyle=col;c.fill();}
+    lane(gI);const ci=gI.c;ci.lineWidth=TRACK_U*.28;let left=Math.floor(f*iTot);
+    for(const s of rec){for(let i=1;i<s.p.length&&left>0;i++,left--){ci.strokeStyle=['#16a34a','#F59E0B','#E5484D'][+s.ok[i]===s.ok[i]?s.ok[i]:(s.ok[i]?0:2)];ci.beginPath();ci.moveTo(s.p[i-1][0],s.p[i-1][1]);ci.lineTo(s.p[i][0],s.p[i][1]);ci.stroke();}if(left<=0)break;left--;}
+    requestAnimationFrame(frame);};
+  requestAnimationFrame(frame);
+}
+/* Retos: además de terminar, hace falta una media mínima de estrellas en cada tarea */
+function taskStars(a,sid){const best={};DB.results.forEach(r=>{if(r.aid===a.id&&r.sid===sid)best[r.item]=Math.max(best[r.item]||0,r.stars);});return a.items.length?a.items.reduce((t,k)=>t+(best[k]||0),0)/a.items.length:0;}
+const retosMinOf=a=>a.cfg.retosMin??DB.settings.retosMin??2;
+function adaptModal(id){
+  const st=DB.students.find(x=>x.id===id);if(!st)return;const a=st.adapt||{};
+  const row=(k,lab,opts,def='Como la tarea')=>`<div class="field"><label>${lab}</label><div class="seg">${[['',def],...opts].map(([v,n])=>`<button class="${String(a[k]??'')===String(v)?'on':''}" data-act="adSet" data-id="${id}" data-k="${k}" data-v="${v}">${n}</button>`).join('')}</div></div>`;
+  const html=`<h3>🧩 Adaptaciones de ${st.avatar} ${esc(st.name)}</h3><p class="muted small">Lo que elijas aquí manda sobre la tarea y sobre los ajustes generales. «Como la tarea» deja lo que diga cada tarea.</p>
+    ${row('stop','⏸️ Si se queda parado sin mover el dedo…',STOP_OPTS)}${row('lift','✋ Si levanta el dedo a mitad de un trazo…',[[true,'Vuelve a empezar'],[false,'Puede seguir']])}
+    ${row('speed','⏱️ ¿Cuenta la velocidad?',[[true,'Sí'],[false,'No, solo precisión']])}${row('voiceGuide','🔊 Guía verbal del trazo y sonido de la letra',[[true,'Sí'],[false,'No']])}
+    ${row('memSecs','🧠 Modo memoria: tiempo que ve la letra',MEM_OPTS)}${row('calm','🌙 Modo calma (sin sonidos ni animaciones)',[[true,'Sí'],[false,'No']],'Como en Ajustes')}
+    <div class="row end" style="margin-top:12px"><button class="btn good" data-x="ok">Hecho</button></div>`;
+  let m=document.querySelector('.modal.adm');if(m)m.querySelector('.mcard').innerHTML=html;else{m=modal(html);m.classList.add('adm');m.close=()=>{m.remove();render();};}m.querySelector('[data-x=ok]').onclick=()=>m.close();
 }
 const CHEERS=['¡Muy bien!','¡Genial!','¡Lo has conseguido!','¡Fantástico!','¡Eres un crack!','¡Bravo!'];
 function onFinish(res){
   const ss=S.session,key=ss.items[ss.idx],st=student(),cfg=ss.cfg;
-  res.stars=starsFor(res);let rec=null,pts=0,nb=[],missionDone=false;
+  res.stars=starsFor(res);let rec=null,pts=0,nb=[],missionDone=false;ss.lastRec=res.rec||[];
   if(st){
     rec=checkRecord(st,ss.set,ss.style,key,cfg,res);
     DB.results.push({id:uid(),sid:st.id,aid:ss.aid||null,activity:ss.activity||'trace',set:ss.set,style:styleOf(ss.set,ss.style),item:key,mode:cfg.mode,size:cfg.size,strict:cfg.strict,helps:cfg.helps,
-      t:res.t,prec:res.prec,outs:res.outs,dir:res.dir,inval:res.inval||0,speed:res.speed,stars:res.stars,rec:!!rec,date:new Date().toISOString()});
+      t:res.t,prec:res.prec,outs:res.outs,dir:res.dir,inval:res.inval||0,speed:res.speed,stars:res.stars,cov:res.cov,lifts:res.lifts||0,rec:!!rec,date:new Date().toISOString()});
     pts=res.stars*10+(cfg.size-1)*2+(rec?5:0);st.points=(st.points||0)+pts;if(rec)st.recs=(st.recs||0)+1;
     if(ss.aid){const a=DB.assignments.find(x=>x.id===ss.aid);if(a){const pr=aProgress(a,st.id);st.missions=st.missions||[];if(pr.done>=pr.tot&&!st.missions.includes(a.id)){st.missions.push(a.id);st.points+=30;pts+=30;missionDone=true;}}}
     nb=checkBadges(st);save();
@@ -1059,34 +1206,218 @@ function onFinish(res){
   sfx(res.stars===3?'win':'ok');if(rec)sfx('rec');
   confetti(res.stars+(rec?2:0)+(missionDone?3:0));
   const itemDone=ss.rep>=cfg.reps;
-  say(missionDone?'¡Misión cumplida!':rec?'¡Nuevo récord! ¡Te has superado!':CHEERS[Math.floor(Math.random()*CHEERS.length)]);
+  const cheer=missionDone?'¡Misión cumplida!':rec?'¡Nuevo récord! ¡Te has superado!':CHEERS[Math.floor(Math.random()*CHEERS.length)];
+  const snd=cfg.voiceGuide?letterSound(ss,key):'';if(snd)say(snd+'. '+cheer,true);else say(cheer);
   const stars=[1,2,3].map(i=>`<span class="${i<=res.stars?'':'off'}">⭐</span>`).join('');
-  const grid=`<div class="rgrid"><div><b>${fmt(res.t)}s</b><span>Tiempo</span></div><div><b>${res.prec}%</b><span>Precisión</span></div><div><b>${res.outs}</b><span>Salidas</span></div><div><b>${res.dir}</b><span>Dirección</span></div></div>${res.inval?`<div class="muted small" style="font-weight:800">🔁 Ha empezado de nuevo ${res.inval} ${res.inval===1?'vez':'veces'}</div>`:''}`;
+  const grid=`<div class="rgrid">${cfg.speed!==false?`<div><b>${fmt(res.t)}s</b><span>Tiempo</span></div>`:''}${res.cov!=null?`<div><b>${res.cov}%</b><span>Forma</span></div>`:''}<div><b>${res.prec}%</b><span>Precisión</span></div><div><b>${res.outs}</b><span>Salidas</span></div><div><b>${res.dir}</b><span>Dirección</span></div></div>${res.inval?`<div class="muted small" style="font-weight:800">🔁 Ha empezado de nuevo ${res.inval} ${res.inval===1?'vez':'veces'}</div>`:''}`;
   let extra=(rec?rec.map(m=>`<div class="recmsg">🏆 ¡NUEVO RÉCORD! ${m}</div>`).join(''):'')+(nb.length?`<div class="newb">🎉 ¡Medalla nueva! ${nb.map(b=>b.i+' '+b.n).join(' · ')}</div>`:'')+(missionDone?`<div class="recmsg">🎯 ¡MISIÓN CUMPLIDA! +30 puntos</div>`:'')+(pts?`<div class="muted small" style="font-weight:800">+${pts} puntos</div>`:'');
   let btns='';
   if(!itemDone){
-    btns=`<button class="btn good big" data-act="nextrep">Siguiente ➜ (${ss.rep+1}/${cfg.reps})</button><button class="btn ghost" data-act="quit">Salir</button>`;
+    btns=`<button class="btn good big" data-act="nextrep">Siguiente ➜ (${ss.rep+1}/${cfg.reps})</button><button class="btn ghost" data-act="viewTrace">👀 Ver mi trazo</button><button class="btn ghost" data-act="quit">Salir</button>`;
   }else{
     const runs=ss.runs;const bt=Math.min(...runs.map(r=>r.t)),bp=Math.max(...runs.map(r=>r.prec));
-    extra+=`<div class="newb">✅ ${esc(itemLabel(ss.set,key))} ×${cfg.reps} · Mejor tiempo ${fmt(bt)} s · Mejor precisión ${bp}%</div>`;
+    extra+=`<div class="newb">✅ ${esc(itemLabel(ss.set,key))} ×${cfg.reps} · ${cfg.speed!==false?`Mejor tiempo ${fmt(bt)} s · `:''}Mejor precisión ${bp}%</div>`;
     const hasNext=ss.idx<ss.items.length-1;const avg=runs.reduce((a,r)=>a+r.stars,0)/runs.length;
     if(hasNext)btns+=`<button class="btn good big" data-act="nextitem">Siguiente: ${esc(itemLabel(ss.set,ss.items[ss.idx+1]))} ➜</button>`;
-    if(!ss.aid&&cfg.size<5&&avg>=2)btns+=`<button class="btn acc big" data-act="smaller">🚀 ¡Supérate! Más pequeña</button>`;
-    btns+=`<button class="btn ghost" data-act="again">↺ Otra vez</button><button class="btn ${hasNext?'ghost':'good'}" data-act="quit">${hasNext?'Salir':'Terminar'}</button>`;
+    if(cfg.size<5&&avg>=2)btns+=`<button class="btn acc big" data-act="smaller">🚀 ¡Supérate! Más pequeña</button>`;
+    if(ss.aid&&st&&DB.assignments.filter(a=>a.active&&a.studentIds.includes(st.id)).every(a=>aProgress(a,st.id).pct>=100))btns=`<button class="btn good big" data-act="quit">✋ ¡He terminado!</button>`+btns.replace('btn good big" data-act="nextitem','btn ghost" data-act="nextitem');
+    btns+=`<button class="btn ghost" data-act="viewTrace">👀 Ver mi trazo</button><button class="btn ghost" data-act="again">↺ Otra vez</button><button class="btn ${hasNext?'ghost':'good'}" data-act="quit">${hasNext?'Salir':'Terminar'}</button>`;
   }
   const ov=document.createElement('div');ov.className='rover';
-  ov.innerHTML=`<div class="rcard"><div class="stars">${stars}</div><div class="rmsg">${res.stars===3?'¡Perfecto!':res.stars===2?'¡Muy bien!':'¡Bien! Puedes mejorar'}</div>${grid}${extra}<div class="rbtns">${btns}</div>${!itemDone&&res.stars>=2&&!rec&&!nb.length?'<div class="autobar"><i></i></div>':''}</div>`;
+  const auto=!itemDone&&res.stars>=2&&!rec&&!nb.length&&cfg.mode!=='memory';
+  ov.innerHTML=`<div class="rcard"><div class="stars">${stars}</div><div class="rmsg">${res.stars===3?'¡Perfecto!':res.stars===2?'¡Muy bien!':'¡Bien! Puedes mejorar'}</div>${grid}${extra}<div class="rbtns">${btns}</div>${auto?'<div class="autobar"><i></i></div>':''}</div>`;
   $('#stage').appendChild(ov);
-  if(!itemDone&&res.stars>=2&&!rec&&!nb.length)S.autoT=setTimeout(()=>{if(S.screen==='play'&&S.session===ss)renderPlay();},4000);
+  if(auto)S.autoT=setTimeout(()=>{if(S.screen==='play'&&S.session===ss)renderPlay();},4000);
+}
+
+/* ============================ RETOS (juegos de trazo) ============================
+   Premio al terminar todas las tareas (o en navegación libre). Mismo principio que las letras:
+   llevar un objeto por un carril sin salirse. Se dibujan en canvas, sin imágenes externas. */
+const RETOS={
+  race:{icon:'🏎️',name:'Gran Circuito',desc:'5 vueltas sin salirte de la carretera. ¡Adelanta a los coches sin chocar!'},
+  train:{icon:'🚂',name:'Tren de las estrellas',desc:'Recoge las estrellas y esquiva rocas y vacas hasta la estación.'}
+};
+function retoCatmull(P,closed,step){
+  const out=[],n=P.length,seg=closed?n:n-1;const g=i=>closed?P[(i+n)%n]:P[Math.max(0,Math.min(n-1,i))];
+  for(let i=0;i<seg;i++){const p0=g(i-1),p1=g(i),p2=g(i+1),p3=g(i+2);const k=Math.max(2,Math.ceil(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])/step));
+    for(let j=0;j<k;j++){const t=j/k,t2=t*t,t3=t2*t;const f=(a,b,c,d)=>.5*(2*b+(-a+c)*t+(2*a-5*b+4*c-d)*t2+(-a+3*b-3*c+d)*t3);
+      out.push([f(p0[0],p1[0],p2[0],p3[0]),f(p0[1],p1[1],p2[1],p3[1])]);}}
+  if(!closed)out.push(P[n-1].slice());return out;
+}
+function retoResample(pts,closed,ds){
+  const a=closed?pts.concat([pts[0]]):pts;const L=[0];for(let i=1;i<a.length;i++)L.push(L[i-1]+Math.hypot(a[i][0]-a[i-1][0],a[i][1]-a[i-1][1]));
+  const tot=L[L.length-1],n=Math.floor(tot/ds),out=[];let j=0;
+  for(let k=0;k<(closed?n:n+1);k++){const s=Math.min(tot,k*ds);while(j<a.length-2&&L[j+1]<s)j++;const t=(s-L[j])/((L[j+1]-L[j])||1);
+    out.push([a[j][0]+(a[j+1][0]-a[j][0])*t,a[j][1]+(a[j+1][1]-a[j][1])*t]);}
+  return out;
+}
+class RetoGame{
+  constructor(stage,kind,hooks){
+    this.stage=stage;this.kind=kind;this.h=hooks||{};this.W=1000;this.H=600;
+    this.cv=document.createElement('canvas');this.cv.style.cssText='position:absolute;inset:0;width:100%;height:100%;touch-action:none';
+    stage.appendChild(this.cv);this.ctx=this.cv.getContext('2d');
+    this.setup();
+    this.u=this.closed?0:2;this.prog=this.u;this.off=0;this.held=false;this.inv=0;this.spin=0;
+    this.laps=0;this.outs=0;this.crashes=0;this.got=0;this.t0=null;this.done=false;
+    this.place(0);
+    this.onR=()=>this.resize();window.addEventListener('resize',this.onR);this.resize();
+    this.pd=e=>this.down(e);this.pm=e=>this.move(e);this.pu=()=>{if(this.held){this.held=false;}};
+    this.cv.addEventListener('pointerdown',this.pd);window.addEventListener('pointermove',this.pm,{passive:false});
+    window.addEventListener('pointerup',this.pu);window.addEventListener('pointercancel',this.pu);
+    this.last=performance.now();this.raf=requestAnimationFrame(t=>this.loop(t));
+  }
+  setup(){
+    const rnd=(a,b)=>a+Math.random()*(b-a);
+    if(this.kind==='race'){
+      const C=[[140,300],[185,145],[330,90],[470,160],[560,260],[650,150],[800,95],[895,215],[880,400],[770,505],[590,505],[480,420],[340,505],[185,470]];
+      this.closed=true;this.lane=50;this.pts=retoResample(retoCatmull(C,true,6),true,4);this.goal=5;
+      const N=this.pts.length;
+      this.obs=[.3,.55,.8].map((f,i)=>({u:f*N,off:(i%2?1:-1)*this.lane*.5,v:20+i*5,col:['#f59e0b','#8b5cf6','#06b6d4'][i]}));
+      this.items=[];
+    }else{
+      const r=()=>rnd(-35,35);
+      const C=[[60,105],[250,105+r()],[450,105+r()],[650,105+r()],[860,115],[935,205],[860,300],[650,300+r()],[450,300+r()],[250,300+r()],[130,305],[65,400],[140,495],[350,495+r()/1.5],[550,495+r()/1.5],[750,495+r()/1.5],[930,495]];
+      this.closed=false;this.lane=46;this.pts=retoResample(retoCatmull(C,false,6),false,4);
+      const N=this.pts.length;this.obs=[];this.items=[];
+      for(let f=.06;f<.95;f+=.034){const side=Math.random()<.5?-1:1;const o={u:f*N,off:side*this.lane*.5};
+        if(Math.random()<.34&&f>.1)this.obs.push(Object.assign(o,{v:0,emo:Math.random()<.5?'🪨':'🐄'}));else this.items.push(Object.assign(o,{got:false}));}
+      this.tot=this.items.length;
+    }
+    // árboles de adorno lejos de la carretera
+    this.deco=[];const far=(x,y)=>this.pts.every((p,i)=>i%6||Math.hypot(p[0]-x,p[1]-y)>this.lane+34);
+    for(let k=0;k<120&&this.deco.length<14;k++){const x=rnd(30,970),y=rnd(30,570);if(far(x,y))this.deco.push([x,y,['🌳','🌲','🌼','🌷','🏡'][Math.floor(Math.random()*5)]]);}
+  }
+  at(i){const N=this.pts.length;return this.closed?this.pts[((i%N)+N)%N]:this.pts[Math.max(0,Math.min(N-1,i))];}
+  tan(i){const a=this.at(i-3),b=this.at(i+3);const d=Math.hypot(b[0]-a[0],b[1]-a[1])||1;return [(b[0]-a[0])/d,(b[1]-a[1])/d];}
+  pos(u,off){const i=Math.floor(u),f=u-i,a=this.at(i),b=this.at(i+1),t=this.tan(i);
+    return [a[0]+(b[0]-a[0])*f-t[1]*off,a[1]+(b[1]-a[1])*f+t[0]*off,Math.atan2(t[1],t[0])];}
+  place(off){const p=this.pos(this.u,off);this.x=p[0];this.y=p[1];this.a=p[2];}
+  resize(){const r=this.stage.getBoundingClientRect(),d=window.devicePixelRatio||1;this.cv.width=r.width*d;this.cv.height=r.height*d;
+    this.s=Math.min(r.width/this.W,r.height/this.H);this.ox=(r.width-this.W*this.s)/2;this.oy=(r.height-this.H*this.s)/2;this.dpr=d;}
+  toW(e){const r=this.cv.getBoundingClientRect();return [(e.clientX-r.left-this.ox)/this.s,(e.clientY-r.top-this.oy)/this.s];}
+  nearest(x,y){let best=1e12,bu=this.u;const N=this.pts.length,b=Math.round(this.u);
+    for(let k=-40;k<=80;k++){const ui=b+k;if(!this.closed&&(ui<0||ui>=N))continue;const p=this.at(ui),d=(p[0]-x)**2+(p[1]-y)**2;if(d<best){best=d;bu=ui;}}
+    return {u:bu,d:Math.sqrt(best)};}
+  down(e){if(this.done)return;const [x,y]=this.toW(e);
+    if(Math.hypot(x-this.x,y-this.y)<75){this.held=true;if(this.t0===null)this.t0=performance.now();try{this.cv.setPointerCapture(e.pointerId);}catch(_){}}
+    else this.h.toast&&this.h.toast(this.kind==='race'?'👆 Pon el dedo encima del coche':'👆 Pon el dedo encima del tren','warn');}
+  move(e){if(!this.held||this.done)return;e.preventDefault();const [x,y]=this.toW(e);const n=this.nearest(x,y);
+    if(n.d>this.lane){this.held=false;this.outs++;this.spin=.6;sfx('out');this.off=0;this.place(0);this.h.toast&&this.h.toast('¡Te has salido! Vuelve a poner el dedo','bad');return;}
+    const p=this.at(n.u),t=this.tan(n.u);this.off=-(x-p[0])*t[1]+(y-p[1])*t[0];
+    this.u=n.u;this.x=x;this.y=y;this.a=Math.atan2(t[1],t[0]);
+    if(this.u>this.prog){this.prog=this.u;
+      if(this.closed){const N=this.pts.length,l=Math.floor(this.prog/N);if(l>this.laps){this.laps=l;if(l>=this.goal)return this.finish();sfx('ok');this.h.toast&&this.h.toast(`🏁 ¡Vuelta ${l}! Quedan ${this.goal-l}`,'good');}}
+      else if(this.prog>=this.pts.length-4)return this.finish();}
+  }
+  crash(o){this.crashes++;this.inv=1.4;this.held=false;this.spin=.6;sfx('dir');
+    this.u=this.closed?this.u-30:Math.max(2,this.u-30);this.off=o.off?-o.off:0;this.place(this.off);
+    this.h.toast&&this.h.toast('💥 ¡Choque! Pasa por el otro lado','bad');}
+  finish(){this.done=true;this.held=false;const t=(performance.now()-(this.t0||performance.now()))/1000;
+    this.h.finish&&this.h.finish({kind:this.kind,t:Math.round(t*10)/10,outs:this.outs,crashes:this.crashes,got:this.got,tot:this.tot||0});}
+  loop(now){const dt=Math.min(.05,(now-this.last)/1000);this.last=now;
+    if(!this.done){
+      this.obs.forEach(o=>{if(o.v)o.u+=o.v*dt;});
+      if(this.inv>0)this.inv-=dt;if(this.spin>0)this.spin-=dt;
+      if(this.held&&this.inv<=0)for(const o of this.obs){const p=this.pos(o.u,o.off);if(Math.hypot(p[0]-this.x,p[1]-this.y)<(o.v?38:34)){this.crash(o);break;}}
+      for(const it of this.items){if(it.got)continue;const p=this.pos(it.u,it.off);if(Math.hypot(p[0]-this.x,p[1]-this.y)<32){it.got=true;this.got++;sfx('ok');}}
+      if(this.t0!==null&&this.h.hud)this.h.hud(this);
+    }
+    this.draw(now);this.raf=requestAnimationFrame(t=>this.loop(t));}
+  path(ctx){ctx.beginPath();this.pts.forEach((p,i)=>i?ctx.lineTo(p[0],p[1]):ctx.moveTo(p[0],p[1]));if(this.closed)ctx.closePath();}
+  draw(now){const c=this.ctx,d=this.dpr;c.setTransform(1,0,0,1,0,0);c.clearRect(0,0,this.cv.width,this.cv.height);
+    c.setTransform(d*this.s,0,0,d*this.s,d*this.ox,d*this.oy);
+    c.fillStyle=this.kind==='race'?'#9be59b':'#bde8a3';c.beginPath();c.roundRect?c.roundRect(0,0,this.W,this.H,30):c.rect(0,0,this.W,this.H);c.fill();
+    c.font='34px serif';c.textAlign='center';c.textBaseline='middle';this.deco.forEach(([x,y,e])=>c.fillText(e,x,y));
+    c.lineJoin='round';c.lineCap='round';const L=this.lane*2;
+    if(this.kind==='race'){
+      this.path(c);c.lineWidth=L+14;c.strokeStyle='#ef4444';c.setLineDash([]);c.stroke();c.strokeStyle='#fff';c.setLineDash([16,16]);c.stroke();
+      c.setLineDash([]);c.lineWidth=L;c.strokeStyle='#64748b';c.stroke();c.lineWidth=3;c.strokeStyle='#f8fafc';c.setLineDash([20,16]);c.stroke();c.setLineDash([]);
+      // línea de salida/meta a cuadros
+      const t=this.tan(0),p=this.at(0);for(let k=-5;k<5;k++)for(let r=0;r<2;r++){c.fillStyle=(k+r)%2?'#111':'#fff';const ox=-t[1]*(k*10+5)+t[0]*(r*10-5),oy=t[0]*(k*10+5)+t[1]*(r*10-5);
+        c.save();c.translate(p[0]+ox,p[1]+oy);c.rotate(Math.atan2(t[1],t[0]));c.fillRect(-5,-5,10,10);c.restore();}
+    }else{
+      this.path(c);c.lineWidth=L+10;c.strokeStyle='#a16207';c.stroke();c.lineWidth=L;c.strokeStyle='#e7c99a';c.stroke();
+      c.lineWidth=L*.75;c.strokeStyle='#8b5e34';c.setLineDash([6,16]);c.stroke();c.setLineDash([]);
+      const a=this.at(0),z=this.at(this.pts.length-1);c.font='44px serif';c.fillText('🏠',a[0]-6,a[1]-50);c.fillText('🚉',z[0]-10,z[1]-52);c.font='30px serif';c.fillText('🏁',z[0]+20,z[1]);
+    }
+    // flecha de sentido
+    if(!this.t0){const p=this.pos(this.closed?14:16,0);c.save();c.translate(p[0],p[1]);c.rotate(p[2]);c.fillStyle='rgba(255,255,255,.9)';c.beginPath();c.moveTo(26,0);c.lineTo(6,-14);c.lineTo(6,14);c.closePath();c.fill();c.restore();}
+    const bob=Math.sin(now/220)*3;
+    c.font='30px serif';this.items.forEach(it=>{if(it.got)return;const p=this.pos(it.u,it.off);c.fillText('⭐',p[0],p[1]+bob);});
+    this.obs.forEach(o=>{const p=this.pos(o.u,o.off);if(o.v)this.car(c,p[0],p[1],p[2],o.col,1);else{c.font='34px serif';c.fillText(o.emo,p[0],p[1]);}});
+    const sp=this.spin>0?this.spin*12:0,blink=this.inv>0&&Math.floor(now/120)%2;
+    if(!blink){
+      if(this.kind==='race')this.car(c,this.x,this.y,this.a+sp,this.h.color||'#ef4444',1.15);
+      else{for(let k=2;k>=1;k--){const p=this.pos(Math.max(0,this.u-13*k),this.off*.5);this.wagon(c,p[0],p[1],p[2],k);}this.loco(c,this.x,this.y,this.a+sp,this.h.color||'#ef4444');}
+    }
+    if(!this.held&&!this.done){c.strokeStyle='rgba(37,99,235,.8)';c.lineWidth=4;c.beginPath();c.arc(this.x,this.y,34+Math.sin(now/200)*6,0,Math.PI*2);c.stroke();}
+  }
+  car(c,x,y,a,col,k){c.save();c.translate(x,y);c.rotate(a);c.scale(k,k);c.fillStyle='#111';[[-17,-15],[7,-15],[-17,10],[7,10]].forEach(([u,v])=>c.fillRect(u,v,11,5));
+    c.fillStyle=col;c.strokeStyle='#1f2937';c.lineWidth=2;c.beginPath();c.roundRect?c.roundRect(-22,-11,44,22,7):c.rect(-22,-11,44,22);c.fill();c.stroke();
+    c.fillStyle='#bfdbfe';c.fillRect(3,-8,9,16);c.fillStyle='rgba(255,255,255,.6)';c.fillRect(-16,-2,14,4);c.restore();}
+  loco(c,x,y,a,col){c.save();c.translate(x,y);c.rotate(a);c.fillStyle='#111';[[-14,-15],[4,-15],[-14,10],[4,10]].forEach(([u,v])=>c.fillRect(u,v,10,5));
+    c.fillStyle=col;c.strokeStyle='#1f2937';c.lineWidth=2;c.fillRect(-20,-12,40,24);c.strokeRect(-20,-12,40,24);c.fillStyle='#374151';c.fillRect(-20,-12,14,24);
+    c.fillStyle='#111';c.beginPath();c.arc(12,0,6,0,Math.PI*2);c.fill();c.fillStyle='#fde047';c.beginPath();c.arc(21,0,4,0,Math.PI*2);c.fill();c.restore();}
+  wagon(c,x,y,a,k){c.save();c.translate(x,y);c.rotate(a);c.fillStyle=['','#22c55e','#3b82f6'][k];c.strokeStyle='#1f2937';c.lineWidth=2;c.fillRect(-15,-10,30,20);c.strokeRect(-15,-10,30,20);c.restore();}
+  destroy(){cancelAnimationFrame(this.raf);window.removeEventListener('resize',this.onR);window.removeEventListener('pointermove',this.pm);
+    window.removeEventListener('pointerup',this.pu);window.removeEventListener('pointercancel',this.pu);this.cv.remove();}
+}
+function retoBestTxt(k,b){return k==='race'?`${fmt(b.t)} s`:`⭐ ${b.got}/${b.tot} · ${fmt(b.t)} s`;}
+function retosOK(st){if(DB.settings.retos===false)return false;
+  if(!st)return !!DB.settings.freePlay;const mis=DB.assignments.filter(a=>a.active&&a.studentIds.includes(st.id));
+  if(mis.some(a=>aProgress(a,st.id).pct<100))return false;if(mis.some(a=>taskStars(a,st.id)<retosMinOf(a)))return false;return mis.length>0||!!DB.settings.freePlay;}
+function retosCard(st){
+  const R=st?(st.retos||{}):{};
+  return `<div class="card" id="retos"><h2>🏁 Retos</h2><p class="muted small">Lleva el coche o el tren con el dedo sin salirte. ¡Supera tu récord!</p><div class="retos">${Object.entries(RETOS).map(([k,r])=>`<button class="rbox" data-act="retoGo" data-v="${k}"><span class="ri">${r.icon}</span><b>${r.name}</b><span class="small muted">${r.desc}</span>${R[k]?`<span class="stat" style="font-size:.85rem">🏁 Récord: ${retoBestTxt(k,R[k])}</span>`:''}</button>`).join('')}</div></div>`;
+}
+/* Picto propio (no ARASAAC): niño/a con la mano levantada, con el color y el animal del alumno */
+function pictoHand(st){const col=st?st.color:'#3b82f6';
+  return `<div class="picto"><svg viewBox="0 0 200 230" width="190" height="218" aria-label="Alumno con la mano levantada">
+   <rect x="4" y="4" width="192" height="222" rx="22" fill="#fff" stroke="#111" stroke-width="5"/>
+   <line x1="88" y1="190" x2="84" y2="214" stroke="#111" stroke-width="13" stroke-linecap="round"/><line x1="112" y1="190" x2="116" y2="214" stroke="#111" stroke-width="13" stroke-linecap="round"/>
+   <line x1="70" y1="124" x2="52" y2="176" stroke="#111" stroke-width="22" stroke-linecap="round"/><line x1="70" y1="124" x2="52" y2="176" stroke="${col}" stroke-width="13" stroke-linecap="round"/>
+   <circle cx="50" cy="182" r="10" fill="#fcd9b6" stroke="#111" stroke-width="4"/>
+   <path d="M68 112 Q100 100 132 112 L138 194 L62 194 Z" fill="${col}" stroke="#111" stroke-width="5" stroke-linejoin="round"/>
+   <g class="wave"><line x1="130" y1="122" x2="158" y2="52" stroke="#111" stroke-width="22" stroke-linecap="round"/><line x1="130" y1="122" x2="158" y2="52" stroke="${col}" stroke-width="13" stroke-linecap="round"/>
+    <circle cx="161" cy="40" r="14" fill="#fcd9b6" stroke="#111" stroke-width="4"/></g>
+   <circle cx="100" cy="70" r="33" fill="#fcd9b6" stroke="#111" stroke-width="5"/>
+   <path d="M68 62 Q74 34 100 36 Q128 34 133 62 Q118 48 100 50 Q82 48 68 62 Z" fill="#6b3f1d" stroke="#111" stroke-width="4" stroke-linejoin="round"/>
+   <circle cx="89" cy="72" r="4" fill="#111"/><circle cx="111" cy="72" r="4" fill="#111"/><path d="M87 84 Q100 96 113 84" fill="none" stroke="#111" stroke-width="4" stroke-linecap="round"/>
+  </svg>${st?`<span class="pav" style="--c:${st.color}">${st.avatar}</span>`:''}</div>`;
+}
+function renderReto(){
+  stopPlay();const k=S.reto.kind,R=RETOS[k],st=student();const best=st&&(st.retos||{})[k];
+  app.innerHTML=`<div class="play"><header class="pbar"><button class="ibtn" data-act="retoQuit" aria-label="Salir">✕</button>
+    <div class="ptitle"><span class="pset">Reto</span><b>${R.icon} ${R.name}</b></div>
+    <div class="pmeta"><span class="timer" id="rhud">👆 Pon el dedo en el ${k==='race'?'coche':'tren'}</span>${best?`<span class="rec">🏁 Récord ${retoBestTxt(k,best)}</span>`:'<span class="rec">¡Primer intento!</span>'}</div></header>
+    <div class="stage" id="stage"><div class="toast" id="toast"></div></div></div>`;
+  const hud=$('#rhud');
+  S.engine=new RetoGame($('#stage'),k,{color:st?st.color:'#ef4444',toast,finish:retoFinish,
+    hud:g=>{const t=fmt((performance.now()-g.t0)/1000);hud.textContent=k==='race'?`🏁 Vuelta ${Math.min(g.laps+1,g.goal)}/${g.goal} · ⏱ ${t} s · 💥 ${g.crashes} · 🚧 ${g.outs}`:`⭐ ${g.got}/${g.tot} · ⏱ ${t} s · 💥 ${g.crashes} · 🚧 ${g.outs}`;}});
+}
+function retoFinish(r){
+  const st=student();let stars,rec=false,pts=0;
+  if(r.kind==='race'){const e=r.outs+r.crashes;stars=e===0?3:e<=3?2:1;}
+  else{const q=r.tot?r.got/r.tot:1;stars=q>=.9&&!r.crashes&&!r.outs?3:q>=.6?2:1;}
+  if(st){st.retos=st.retos||{};const b=st.retos[r.kind];
+    const better=!b||(r.kind==='race'?r.t<b.t:(r.got>b.got||(r.got===b.got&&r.t<b.t)));
+    if(better){rec=!!b;st.retos[r.kind]={t:r.t,got:r.got,tot:r.tot,date:new Date().toISOString()};}
+    pts=r.kind==='race'?10+(stars===3?5:0):r.got;st.points=(st.points||0)+pts;save();}
+  sfx(rec?'rec':'win');say(stars===3?'¡Increíble! ¡Reto superado!':'¡Reto superado! ¡Supérate!');
+  const grid=`<div class="rgrid"><div><b>${fmt(r.t)} s</b><span>Tiempo</span></div>${r.kind==='train'?`<div><b>${r.got}/${r.tot}</b><span>Estrellas</span></div>`:`<div><b>5/5</b><span>Vueltas</span></div>`}<div><b>${r.crashes}</b><span>Choques</span></div><div><b>${r.outs}</b><span>Salidas</span></div></div>`;
+  const ov=document.createElement('div');ov.className='rover';
+  ov.innerHTML=`<div class="rcard"><div class="stars">${[1,2,3].map(i=>`<span class="${i<=stars?'':'off'}">⭐</span>`).join('')}</div><div class="rmsg">${r.kind==='race'?'🏁 ¡Carrera terminada!':'🚉 ¡Has llegado a la estación!'}</div>${grid}${rec?'<div class="recmsg">🏆 ¡NUEVO RÉCORD!</div>':''}${pts?`<div class="muted small" style="font-weight:800">+${pts} puntos</div>`:''}
+    <div class="rbtns"><button class="btn good big" data-act="retoGo" data-v="${r.kind}">↺ Otra vez</button><button class="btn ghost" data-act="retoQuit">Volver</button></div></div>`;
+  $('#stage').appendChild(ov);
 }
 
 /* ============================ ZONA DOCENTE ============================ */
-function newForm(){const vs=visStudents();return{id:null,title:'',activity:'trace',set:'letras',style:'upper',sel:{},text:'',cons:[],vows:['a','e','i','o','u'],inv:false,cfg:{mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true,stop:DB.settings.stop??2},studentIds:vs.map(s=>s.id)};}
+function newForm(){const vs=visStudents();return{id:null,title:'',activity:'trace',set:'letras',style:'upper',sel:{},text:'',cons:[],vows:['a','e','i','o','u'],inv:false,cfg:Object.assign({mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true},cfgDef()),studentIds:vs.map(s=>s.id)};}
 function renderTeacher(){
   const sc=$('.wrap')?window.scrollY:0;
-  const tabs=[['alumnos','👧 Alumnos'],['tareas','🎯 Tareas'],['resultados','📊 Resultados'],['ajustes','⚙️ Ajustes']];
+  const tabs=[['alumnos','👧 Alumnos'],['equipos','🤝 Equipos'],['tareas','🎯 Tareas'],['resultados','📊 Resultados'],['ajustes','⚙️ Ajustes']];
   let body='';
-  if(S.ttab==='alumnos')body=tAlumnos();else if(S.ttab==='tareas')body=tTareas();else if(S.ttab==='resultados')body=tResultados();else body=tAjustes();
+  if(S.ttab==='alumnos')body=tAlumnos();else if(S.ttab==='equipos')body=tEquipos();else if(S.ttab==='tareas')body=tTareas();else if(S.ttab==='resultados')body=tResultados();else body=tAjustes();
   app.innerHTML=`<div class="wrap"><div class="shead" style="padding-top:max(6px,env(safe-area-inset-top))"><button class="ibtn" data-act="home">←</button><h1 class="grow" style="font-size:1.7rem">Panel docente</h1></div>
    <div class="tabs">${tabs.map(([k,n])=>`<button class="${S.ttab===k?'on':''}" data-act="ttab" data-v="${k}">${n}</button>`).join('')}</div>${body}</div>${copyLine()}`;
   window.scrollTo(0,sc);
@@ -1097,19 +1428,19 @@ function tAlumnos(){
   const classes=`<div class="card"><h2>🏫 Clases (${DB.classes.length})</h2><p class="muted small">Crea tus clases y asigna cada alumno a la suya. Luego podrás ver la pantalla de inicio, las tareas y los resultados de una clase o de todas.</p>
    ${DB.classes.map(k=>`<div class="clsrow"><span style="font-size:1.5rem">🏫</span><input value="${esc(k.name)}" data-cname="${k.id}"><span class="muted small grow">${DB.students.filter(s=>s.classId===k.id).length} alumnos</span><button class="btn danger sm" data-act="delCls" data-id="${k.id}">Eliminar</button></div>`).join('')}
    <div class="row" style="margin-top:10px"><input class="txtin" id="newCls" placeholder="Nombre de la clase (p. ej. 1.º A)" style="max-width:320px"><button class="btn good" data-act="addCls">➕ Añadir clase</button></div></div>`;
-  const G=DB.groups||[],dg=devGroup();
-  const groups=`<div class="card"><h2>📱 Grupos de tableta (${G.length})</h2><p class="muted small">Un grupo dice qué alumnos salen en una tableta, aunque sean de clases distintas (p. ej. «Tableta 1» con alumnos de 1.º A, B y C). Asigna el grupo de cada alumno en la lista de abajo. En la pantalla de inicio de cada tableta se elige clase y grupo; cada clase recuerda su grupo en esa tableta.</p>
+  const G=DB.groups||[];
+  const groups=`<div class="card"><h2>📱 Dispositivos (${G.length})</h2><p class="muted small">Un dispositivo dice qué alumnos salen en cada tableta, aunque sean de clases distintas (p. ej. «Tableta 1» con alumnos de 1.º A, B y C). Asigna el dispositivo de cada alumno en la lista de abajo. En la pantalla de inicio de cada tableta se elige Clase y Dispositivo (cada clase lo recuerda en esa tableta). Además, en Equipos la app avisa si coinciden dos alumnos del mismo dispositivo.</p>
    ${G.map(g=>`<div class="clsrow"><span style="font-size:1.5rem">📱</span><input value="${esc(g.name)}" data-gname="${g.id}"><span class="muted small grow">${(n=>n+(n===1?' alumno':' alumnos'))(DB.students.filter(s=>s.groupId===g.id).length)}</span><button class="btn danger sm" data-act="delGroup" data-id="${g.id}">Eliminar</button></div>`).join('')}
-   <div class="row" style="margin-top:10px"><input class="txtin" id="newGroup" placeholder="Nombre del grupo (p. ej. Tableta 1)" style="max-width:320px"><button class="btn good" data-act="addGroup">➕ Añadir grupo</button></div>
+   <div class="row" style="margin-top:10px"><input class="txtin" id="newGroup" placeholder="Nombre del dispositivo (p. ej. Tableta 1)" style="max-width:320px"><button class="btn good" data-act="addGroup">➕ Añadir dispositivo</button></div>
 </div>`;
   return `${classes}${groups}<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px">${DB.classes.length?`<label class="muted small" style="font-weight:800">Clase</label><select class="selcls" id="newNamesCls">${clsOptions(c&&c!=='_none'?c:'')}</select>`:''}<button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
-  <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}${G.length?`<select data-sgroup="${s.id}" title="Grupo de tableta"><option value="">Sin grupo</option>${G.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>📱 ${esc(g.name)}</option>`).join('')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
+  <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}${G.length?`<select data-sgroup="${s.id}" title="Dispositivo"><option value="">Sin dispositivo</option>${G.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>📱 ${esc(g.name)}</option>`).join('')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ${s.adapt?'acc':'ghost'} sm" data-act="adapt" data-id="${s.id}" title="Adaptaciones de este alumno">🧩${s.adapt?' Adaptado':''}</button><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
 }
 function tTareas(){
   let form='';
   if(S.form){
     const F=S.form;const RS=realSet(F.set,F.style);const keys=F.set==='text'?[]:SETS[RS].keys();const sel=F.sel[RS]||[];
-    const seg=(k,opts,lab)=>`<div class="field"><label>${lab}</label><div class="seg">${opts.map(([v,n])=>`<button class="${String(F.cfg[k])===String(v)?'on':''}" data-act="fcfg" data-k="${k}" data-v="${v}">${n}</button>`).join('')}</div></div>`;
+    const seg=(k,opts,lab)=>`<div class="field"><label>${lab}</label><div class="seg">${opts.map(([v,n])=>`<button class="${String(F.cfg[k]??cfgDef()[k])===String(v)?'on':''}" data-act="fcfg" data-k="${k}" data-v="${v}">${n}</button>`).join('')}</div></div>`;
     form=`<div class="card" style="border:3px solid var(--acc)"><h2>${F.id?'✏️ Editar tarea':'➕ Nueva tarea'}</h2>
      <div class="field"><label>Título (lo ve el alumno)</label><input class="txtin" data-f="title" value="${esc(F.title)}" placeholder="Ej.: Vocales en script"></div>
      <div class="field"><label>Actividad</label><div class="seg">${Object.values(ACTIVITIES).map(a=>`<button class="${F.activity===a.id?'on':''}" data-act="fact" data-v="${a.id}">${a.icon} ${a.name}</button>`).join('')}</div></div>
@@ -1129,7 +1460,13 @@ function tTareas(){
      ${seg('strict',Object.entries(STRICT_N),'Exigencia (cuánto puede salirse antes de contar salida)')}
      ${seg('stop',STOP_OPTS,'Si se queda parado sin mover el dedo… (el intento no vale y vuelve a empezar)')}
      ${seg('guides',[[true,'Con pauta'],[false,'Sin pauta']],'Pauta (líneas)')}
-     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button>${DB.classes.map(k=>`<button class="btn ghost sm" data-act="fstuCls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}${(DB.groups||[]).map(g=>`<button class="btn ghost sm" data-act="fstuGrp" data-v="${g.id}">📱 ${esc(g.name)}</button>`).join('')}</div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}${s.classId&&DB.classes.length>1?` <span class="small" style="opacity:.7">· ${esc(clsName(s.classId))}</span>`:''}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
+     ${F.cfg.mode==='memory'?seg('memSecs',MEM_OPTS,'🧠 Modo memoria: tiempo que se ve la letra antes de desaparecer'):''}
+     ${seg('lift',[[true,'Vuelve a empezar'],[false,'Puede seguir']],'✋ Si levanta el dedo a mitad de un trazo…')}
+     ${seg('speed',[[true,'Sí (cronómetro y récords de tiempo)'],[false,'No, solo precisión']],'⏱️ ¿Cuenta la velocidad?')}
+     ${seg('voiceGuide',[[true,'Sí'],[false,'No']],'🔊 Guía verbal del trazo y sonido de la letra')}
+     ${seg('retosMin',RMIN_OPTS,'🏁 Estrellas mínimas de media para desbloquear los retos')}
+     <p class="muted small">Si un alumno tiene 🧩 adaptaciones (pestaña Alumnos), sus adaptaciones mandan sobre esta tarea.</p>
+     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button>${DB.classes.map(k=>`<button class="btn ghost sm" data-act="fstuCls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}${(DB.teams||[]).filter(t=>!curCls()||t.classId===curCls()).map(t=>`<button class="btn ghost sm" data-act="fstuTeam" data-v="${t.id}">🤝 ${esc(t.name)}${DB.classes.length>1&&!curCls()?' ('+esc(clsName(t.classId))+')':''}</button>`).join('')}${(DB.groups||[]).map(g=>`<button class="btn ghost sm" data-act="fstuGrp" data-v="${g.id}">📱 ${esc(g.name)}</button>`).join('')}</div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}${s.classId&&DB.classes.length>1?` <span class="small" style="opacity:.7">· ${esc(clsName(s.classId))}</span>`:''}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
      <div class="row end" style="margin-top:18px"><button class="btn ghost" data-act="fcancel">Cancelar</button><button class="btn good big" data-act="fsave">💾 Guardar tarea</button></div></div>`;
   }
   const list=DB.assignments.slice().reverse().filter(a=>!curCls()||a.studentIds.some(id=>{const s=DB.students.find(x=>x.id===id);return s&&inCls(s);})).map(a=>{
@@ -1140,6 +1477,33 @@ function tTareas(){
   return `${form}<div class="card"><div class="row"><h2 class="grow" style="margin:0">Tareas asignadas</h2>${S.form?'':'<button class="btn acc" data-act="fnew">➕ Nueva tarea</button>'}</div>${clsBar()}<div class="tasks" style="margin-top:12px">${list||'<p class="muted">Aún no hay tareas. Crea una y asígnala a los alumnos: les aparecerá en «Mis misiones».</p>'}</div></div>`;
 }
 function agg(rs){const n=rs.length;if(!n)return null;const sum=k=>rs.reduce((a,r)=>a+(r[k]||0),0);return{n,prec:Math.round(sum('prec')/n),t:sum('t')/n,outs:sum('outs')/n,dir:sum('dir')/n,stars:sum('stars'),bt:Math.min(...rs.map(r=>r.t)),bp:Math.max(...rs.map(r=>r.prec)),sp:sum('speed')/n};}
+/* ============================ EQUIPOS ============================
+   Equipos dentro de una clase. Los forma el profesor arrastrando alumnos. Si en un equipo coinciden dos
+   alumnos del mismo dispositivo, el equipo muestra un aviso. */
+const teamsOf=cid=>(DB.teams||[]).filter(t=>t.classId===cid);
+const teamName=id=>((DB.teams||[]).find(t=>t.id===id)||{}).name||'';
+function teamConflict(st,teamId){ // ¿hay ya en ese equipo alguien de la misma tableta?
+  if(!teamId||!st.groupId)return null;
+  return DB.students.find(o=>o.id!==st.id&&o.teamId===teamId&&o.groupId===st.groupId)||null;
+}
+function teamClashes(tid){ // tabletas repetidas dentro de un equipo → [{g, names}]
+  const m={};DB.students.filter(x=>x.teamId===tid&&x.groupId).forEach(x=>(m[x.groupId]=m[x.groupId]||[]).push(x.name));
+  return Object.entries(m).filter(([,n])=>n.length>1).map(([g,n])=>({g,names:n}));
+}
+function tEquipos(){
+  if(!DB.classes.length)return `<div class="card"><h2>🤝 Equipos</h2><p class="muted">Primero crea las clases en <b>Alumnos</b>.</p></div>`;
+  let c=curCls();if(!c||c==='_none'){c=DB.classes[0].id;}
+  const studs=DB.students.filter(s=>s.classId===c),T=teamsOf(c);
+  const bar=`<div class="seg clsbar">${DB.classes.map(k=>`<button class="${c===k.id?'on':''}" data-act="cls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}</div>`;
+  const tips=`<p class="muted small">Tú decides los equipos: <b>arrastra</b> cada alumno a su equipo (con el dedo o con el ratón). Puedes cambiarlo cuando quieras; sus estrellas, medallas y resultados van con él. Si en un equipo coinciden dos alumnos de la misma tableta, el equipo muestra un ⚠️ aviso. En la pantalla de inicio se elige <b>Clase – Equipo</b>.</p>`;
+  const make=`<div class="row"><input class="txtin" id="newTeam" placeholder="Nombre del equipo (p. ej. Equipo 1)" style="max-width:300px"><button class="btn good" data-act="addTeam" data-v="${c}">➕ Añadir equipo</button></div>`;
+  const card=s=>`<div class="srow dragst" data-drag="${s.id}" style="padding:6px 4px"><span style="font-size:1.6rem">${s.avatar}</span><b class="grow">${esc(s.name)}</b><span class="muted small">${s.groupId?'📱 '+esc(grpName(s.groupId)):'sin tableta'}</span><span class="muted" style="font-size:1.2rem">⠿</span></div>`;
+  const loose=studs.filter(s=>!s.teamId||!T.some(t=>t.id===s.teamId));
+  const cols=`<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px;margin-top:12px">${T.map(t=>{const m=studs.filter(s=>s.teamId===t.id);const cl=teamClashes(t.id);
+      return `<div class="task dropz${cl.length?' warn':''}" data-drop="${t.id}"><div class="row"><span style="font-size:1.4rem">🤝</span><input class="txtin" style="min-width:0;flex:1;font-weight:900" value="${esc(t.name)}" data-tname="${t.id}"><span class="muted small">${m.length}</span><button class="btn danger sm" data-act="delTeam" data-id="${t.id}" title="Eliminar equipo">✕</button></div>${cl.length?`<div class="tmwarn">⚠️ Misma tableta: ${cl.map(x=>`<b>${x.names.map(esc).join(' y ')}</b> (📱 ${esc(grpName(x.g))})`).join('; ')}</div>`:''}${m.map(card).join('')||'<p class="muted small">Arrastra alumnos aquí</p>'}</div>`;}).join('')}
+      <div class="task dropz" data-drop="" style="border-style:dashed"><h3>Sin equipo (${loose.length})</h3>${loose.map(card).join('')||'<p class="muted small">Todos tienen equipo 🎉</p>'}</div></div>`;
+  return `<div class="card"><h2>🤝 Equipos de la clase</h2>${bar}${tips}${make}${studs.length?cols:'<p class="muted">No hay alumnos en esta clase.</p>'}</div>`;
+}
 function tResultados(){
   const rows=visStudents().map(s=>{const rs=DB.results.filter(r=>r.sid===s.id);const last=rs.slice(-20);const A=agg(last);
     return `<tr><td><button class="btn ghost sm" data-act="rsel" data-id="${s.id}">${s.avatar} ${esc(s.name)}</button>${DB.classes.length&&!curCls()&&s.classId?` <span class="muted small">${esc(clsName(s.classId))}</span>`:''}</td><td>${rs.length}</td><td>${rs.reduce((a,r)=>a+r.stars,0)}</td><td>${A?A.prec+'%':'–'}</td><td>${A?fmt(A.t)+' s':'–'}</td><td>${A?fmt(A.outs):'–'}</td><td>${A?fmt(A.dir):'–'}</td><td>${(s.missions||[]).length}</td><td>${(s.recs||0)}</td></tr>`;}).join('');
@@ -1163,19 +1527,28 @@ function tResultados(){
 function tAjustes(){
   const s=DB.settings;const tg=(k,n)=>`<div class="row"><label class="grow" style="font-weight:800">${n}</label><div class="seg"><button class="${s[k]?'on':''}" data-act="set" data-k="${k}" data-v="1">Sí</button><button class="${!s[k]?'on':''}" data-act="set" data-k="${k}" data-v="0">No</button></div></div>`;
   return `<div class="card"><h2>Preferencias</h2><div class="opts">
-    ${tg('freePlay','Permitir práctica libre a los alumnos')}${tg('sound','Sonidos')}${tg('voice','Voz de ánimo (voz del sistema)')}
+    ${tg('freePlay','Permitir práctica libre a los alumnos')}${tg('retos','Retos (juegos) al terminar las tareas')}${tg('sound','Sonidos')}${tg('voice','Voz de ánimo (voz del sistema)')}
     <div class="row"><label class="grow" style="font-weight:800">Exigencia por defecto</label><div class="seg">${Object.entries(STRICT_N).map(([k,v])=>`<button class="${s.strict===k?'on':''}" data-act="setStrict" data-v="${k}">${v}</button>`).join('')}</div></div>
     <div class="row"><label class="grow" style="font-weight:800">Parada máxima por defecto (práctica libre y tareas nuevas)</label><div class="seg">${STOP_OPTS.map(([v,n])=>`<button class="${(s.stop??2)===v?'on':''}" data-act="setStop" data-v="${v}">${n}</button>`).join('')}</div></div>
+    ${tg('calm','🌙 Modo calma (sin sonidos ni animaciones)')}
+   </div></div>
+   <div class="card"><h2>🧩 Opciones por defecto de las tareas</h2><p class="muted small">Se aplican a la práctica libre y a las tareas nuevas. Cada tarea puede cambiarlas, y las 🧩 adaptaciones de un alumno mandan sobre todo.</p><div class="opts">
+    ${tg('lift','✋ Levantar el dedo a mitad de un trazo invalida el intento')}${tg('speed','⏱️ La velocidad cuenta (cronómetro y récords de tiempo)')}${tg('voiceGuide','🔊 Guía verbal del trazo y sonido de la letra')}
+    <div class="row"><label class="grow" style="font-weight:800">🧠 Modo memoria: tiempo que se ve la letra</label><div class="seg">${MEM_OPTS.map(([v,n])=>`<button class="${(s.memSecs??3)===v?'on':''}" data-act="setNum" data-k="memSecs" data-v="${v}">${n}</button>`).join('')}</div></div>
+    <div class="row"><label class="grow" style="font-weight:800">🏁 Estrellas mínimas de media para desbloquear los retos</label><div class="seg">${RMIN_OPTS.map(([v,n])=>`<button class="${(s.retosMin??2)===v?'on':''}" data-act="setNum" data-k="retosMin" data-v="${v}">${n}</button>`).join('')}</div></div>
+   </div></div>
+   <div class="card"><h2>🔒 Acceso</h2><div class="opts">
     <div class="row"><label class="grow" style="font-weight:800">PIN docente</label><input class="txtin" id="newPin" inputmode="numeric" maxlength="8" placeholder="Nuevo PIN (4-8 cifras)" style="max-width:220px;min-width:140px"><button class="btn sm" data-act="setPin">Cambiar</button></div>
    </div></div>
    <div class="card"><h2>💾 Copia de seguridad</h2><p class="muted small">Los datos se guardan <b>solo en este dispositivo y navegador</b>. Para pasarlos a otra tableta o a tu ordenador, exporta aquí e importa allí. «Combinar» suma alumnos, tareas y resultados sin borrar lo que ya hay.</p>
     <div class="row"><button class="btn" data-act="expJSON">⬇️ Exportar copia (.json)</button><label class="btn ghost">📥 Importar copia<input type="file" id="impFile" accept=".json,application/json" hidden></label></div>
-    <p class="muted small">${DB.classes.length} clases · ${(DB.groups||[]).length} grupos · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
+    <p class="muted small">${DB.classes.length} clases · ${(DB.groups||[]).length} dispositivos · ${(DB.teams||[]).length} equipos · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
    <div class="card"><h2>📏 Cómo se mide</h2><ul class="help muted">
     <li><b>Precisión</b>: porcentaje del recorrido del dedo que queda dentro del camino de la letra.</li>
     <li><b>Salida</b>: cada vez que el dedo se aleja del camino más de lo que permite la exigencia. En modo bola, la bola se suelta y hay que volver a cogerla.</li>
     <li><b>Dirección</b>: ir hacia atrás por el camino o empezar el trazo por otro punto (modo sin bola).</li>
     <li><b>Reinicios</b>: si se levanta el dedo a mitad de un trazo o se queda parado más tiempo del permitido, el intento no vale y vuelve a empezar desde el principio. Se anota cuántas veces ha tenido que empezar de nuevo. Levantar el dedo entre un trazo y el siguiente (punto de la i, raya de la t, mayúsculas de varios trazos) sí está permitido.</li>
+    <li><b>Modo memoria</b>: la letra se ve unos segundos y desaparece. Se compara lo escrito con el modelo (se perdona la posición): <b>Forma</b> = cuánto del modelo se ha cubierto; también cuenta salidas y trazos en sentido contrario. Con menos de 80% de forma no hay ⭐⭐⭐, y con menos de 60% solo ⭐.</li>
     <li><b>Velocidad (u/s)</b>: longitud del camino en unidades de la rejilla por segundo (60 u = altura de una mayúscula). Sirve para comparar al mismo alumno en el tiempo; no son centímetros.</li>
     <li><b>Estrellas</b>: ⭐⭐⭐ ≥90% de precisión, sin salidas y sin errores de dirección · ⭐⭐ ≥75%, hasta 2 salidas y 1 error · ⭐ resto.</li>
     <li><b>Récord</b>: se guarda por alumno, elemento, modo y tamaño. Se bate al mejorar el tiempo (con ⭐⭐ o más) o la precisión.</li>
@@ -1191,7 +1564,7 @@ function exportCSV(){
   download(`trazos_resultados_${new Date().toISOString().slice(0,10)}.csv`,'﻿'+[H.join(';'),...lines].join('\n'),'text/csv;charset=utf-8');
 }
 function mergeDB(inc){
-  DB.classes=DB.classes||[];DB.groups=DB.groups||[];['classes','groups','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
+  DB.classes=DB.classes||[];DB.groups=DB.groups||[];['classes','groups','teams','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
   const ids=new Set(DB.results.map(r=>r.id));(inc.results||[]).forEach(r=>{if(!ids.has(r.id))DB.results.push(r);});
   DB.results.sort((a,b)=>a.date<b.date?-1:1);
   for(const sid in (inc.records||{})){const R=DB.records[sid]||(DB.records[sid]={});for(const k in inc.records[sid]){const a=R[k],b=inc.records[sid][k];R[k]=!a?b:{t:Math.min(a.t,b.t),prec:Math.max(a.prec,b.prec)};}}
@@ -1210,21 +1583,33 @@ const ACT={
  pset:b=>{S.practice.set=b.dataset.v;render();},
  popt:b=>{const k=b.dataset.k;let v=b.dataset.v;if(['size','reps'].includes(k))v=+v;S.practice[k]=v;render();},
  ptextok:()=>{const i=$('#ptext');if(i){S.practice.text=i.value;render();}},
- pitem:b=>{const P=S.practice;const keys=P.set==='text'?parseTextItems(P.text):SETS[realSet(P.set,P.style)].keys();const idx=Math.max(0,keys.indexOf(b.dataset.v));
+ pitem:b=>{if(S.sid&&pendingFor(S.sid).length){render();return;}const P=S.practice;const keys=P.set==='text'?parseTextItems(P.text):SETS[realSet(P.set,P.style)].keys();const idx=Math.max(0,keys.indexOf(b.dataset.v));
    startSession({activity:'trace',set:realSet(P.set,P.style),style:P.style,items:keys,idx,cfg:{mode:P.mode,size:P.size,reps:P.reps,helps:P.helps},aid:null});},
  quit:()=>{go(S.sid||S.screen==='play'?'student':'home');},
  restart:()=>renderPlay(),
  nextrep:()=>renderPlay(),
  nextitem:()=>{const ss=S.session;ss.idx++;ss.runs=[];ss.rep=0;ss.rep=repStartFor(ss);renderPlay();},
  again:()=>{const ss=S.session;ss.rep=0;ss.runs=[];renderPlay();},
- smaller:()=>{const ss=S.session;ss.cfg.size=Math.min(5,ss.cfg.size+1);S.practice.size=ss.cfg.size;ss.rep=0;ss.runs=[];renderPlay();},
+ viewTrace:()=>{clearTimeout(S.autoT);const ab=document.querySelector('.autobar');if(ab)ab.remove();showTrace();},
+ adapt:b=>adaptModal(b.dataset.id),
+ adSet:b=>{const st=DB.students.find(x=>x.id===b.dataset.id);if(!st)return;st.adapt=st.adapt||{};const k=b.dataset.k,v=b.dataset.v;if(v==='')delete st.adapt[k];else st.adapt[k]=v==='true'?true:v==='false'?false:+v;if(!Object.keys(st.adapt).length)delete st.adapt;save();adaptModal(st.id);},
+ setNum:b=>{DB.settings[b.dataset.k]=+b.dataset.v;save();render();},
+ retoGo:b=>{if(!retosOK(student()))return go('student');S.reto={kind:b.dataset.v};go('reto');},
+ retoQuit:()=>go('student'),
+ goRetos:()=>{const e=$('#retos');if(e)e.scrollIntoView({behavior:'smooth'});},
+ goMis:()=>{const e=$('#misiones');if(e)e.scrollIntoView({behavior:'smooth'});},
+ smaller:()=>{const ss=S.session;ss.cfg.size=Math.min(5,ss.cfg.size+1);if(!ss.aid)S.practice.size=ss.cfg.size;ss.rep=0;ss.runs=[];renderPlay();},
  ttab:b=>{S.ttab=b.dataset.v;render();},
  cls:b=>{S.cls=b.dataset.v;try{localStorage.setItem(CLS_KEY,S.cls);}catch(e){}render();},
  addCls:()=>{const i=$('#newCls');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre de la clase.');return;}if(DB.classes.some(c=>c.name.toLowerCase()===n.toLowerCase())){info('Ya hay una clase con ese nombre.');return;}DB.classes.push({id:uid(),name:n});save();render();},
  delCls:b=>{const k=DB.classes.find(c=>c.id===b.dataset.id);const n=DB.students.filter(s=>s.classId===k.id).length;confirmBox(`¿Eliminar la clase <b>${esc(k.name)}</b>?${n?` Sus ${n} alumnos se conservan, quedan «sin clase».`:''}`,'Eliminar',()=>{DB.classes=DB.classes.filter(c=>c.id!==k.id);DB.students.forEach(s=>{if(s.classId===k.id)delete s.classId;});save();render();});},
+ addTeam:b=>{const c=b.dataset.v,inp=document.getElementById('newTeam');const n=(inp&&inp.value.trim())||('Equipo '+(teamsOf(c).length+1));DB.teams.push({id:uid(),classId:c,name:n});save();render();},
+ delTeam:b=>{const t=(DB.teams||[]).find(x=>x.id===b.dataset.id);if(!t)return;confirmBox(`¿Eliminar <b>${esc(t.name)}</b>? Sus alumnos pasan a «Sin equipo» (no pierden nada).`,'Eliminar',()=>{DB.teams=DB.teams.filter(x=>x.id!==t.id);DB.students.forEach(s=>{if(s.teamId===t.id)delete s.teamId;});save();render();});},
+ fstuTeam:b=>{const ids=DB.students.filter(s=>s.teamId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
  fstuGrp:b=>{const ids=DB.students.filter(s=>s.groupId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
- addGroup:()=>{const i=$('#newGroup');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre del grupo.');return;}DB.groups=DB.groups||[];if(DB.groups.some(g=>g.name.toLowerCase()===n.toLowerCase())){info('Ya hay un grupo con ese nombre.');return;}DB.groups.push({id:uid(),name:n});save();render();},
- delGroup:b=>{const g=DB.groups.find(x=>x.id===b.dataset.id);confirmBox(`¿Eliminar el grupo <b>${esc(g.name)}</b>? Los alumnos no se borran, solo se quedan sin grupo.`,'Eliminar',()=>{DB.groups=DB.groups.filter(x=>x.id!==g.id);DB.students.forEach(s=>{if(s.groupId===g.id)delete s.groupId;});save();render();});},
+ addGroup:()=>{const i=$('#newGroup');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre del dispositivo.');return;}DB.groups=DB.groups||[];if(DB.groups.some(g=>g.name.toLowerCase()===n.toLowerCase())){info('Ya hay un dispositivo con ese nombre.');return;}DB.groups.push({id:uid(),name:n});save();render();},
+ delGroup:b=>{const g=DB.groups.find(x=>x.id===b.dataset.id);confirmBox(`¿Eliminar el dispositivo <b>${esc(g.name)}</b>? Los alumnos no se borran, solo se quedan sin dispositivo.`,'Eliminar',()=>{DB.groups=DB.groups.filter(x=>x.id!==g.id);DB.students.forEach(s=>{if(s.groupId===g.id)delete s.groupId;});save();render();});},
+ devTeam:b=>{setDevTeam(b.dataset.v);render();},
  devGroup:b=>{setDevGroup(b.dataset.v);render();},
  fstuCls:b=>{const ids=DB.students.filter(s=>s.classId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
  addStudents:()=>{const t=$('#newNames').value.split('\n').map(s=>s.trim()).filter(Boolean);const cs=$('#newNamesCls');const cid=cs?cs.value:'';t.forEach(name=>{const i=DB.students.length;const st={id:uid(),name,avatar:AVATARS[i%AVATARS.length],color:COLORS[i%COLORS.length],points:0,badges:[],missions:[],recs:0};if(cid)st.classId=cid;DB.students.push(st);});save();render();},
@@ -1240,7 +1625,7 @@ const ACT={
  fitem:b=>{const F=S.form,RS=realSet(F.set,F.style),a=F.sel[RS]||(F.sel[RS]=[]),k=b.dataset.v,i=a.indexOf(k);if(i<0)a.push(k);else a.splice(i,1);const all=SETS[RS].keys();a.sort((x,y)=>all.indexOf(x)-all.indexOf(y));render();},
  fall:()=>{const F=S.form,RS=realSet(F.set,F.style);F.sel[RS]=SETS[RS].keys().slice();render();},
  fnone:()=>{const F=S.form;F.sel[realSet(F.set,F.style)]=[];render();},
- fcfg:b=>{const k=b.dataset.k;let v=b.dataset.v;if(['size','reps','stop'].includes(k))v=+v;if(k==='guides')v=v==='true';S.form.cfg[k]=v;render();},
+ fcfg:b=>{const k=b.dataset.k;let v=b.dataset.v;if(['size','reps','stop','memSecs','retosMin'].includes(k))v=+v;if(['guides','lift','speed','voiceGuide'].includes(k))v=v==='true';S.form.cfg[k]=v;render();},
  fcons:b=>{const a=S.form.cons,v=b.dataset.v,i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1);render();},
  fvow:b=>{const a=S.form.vows,v=b.dataset.v,i=a.indexOf(v);if(i<0)a.push(v);else a.splice(i,1);render();},
  finv:()=>{S.form.inv=!S.form.inv;render();},
@@ -1268,10 +1653,28 @@ const ACT={
  wipeAll:()=>confirmBox('¿Borrar <b>TODO</b> (alumnos, tareas y resultados)? No se puede deshacer.','Borrar todo',()=>{const pin=DB.settings.pin;DB=defaultDB();DB.settings.pin=pin;save();render();})
 };
 document.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;const f=ACT[b.dataset.act];if(f){unlockAudio();f(b,e);}});
+/* Arrastrar alumnos entre equipos con pointer events (funciona en iPad/Android/pizarra y ratón) */
+(()=>{let d=null;
+  const zoneAt=(x,y)=>{const el=document.elementFromPoint(x,y);return el&&el.closest('[data-drop]');};
+  document.addEventListener('pointerdown',e=>{const c=e.target.closest('[data-drag]');if(!c||e.button>0)return;
+    const r=c.getBoundingClientRect();d={id:c.dataset.drag,src:c,x0:e.clientX,y0:e.clientY,dx:e.clientX-r.left,dy:e.clientY-r.top,w:r.width,g:null,z:null};});
+  document.addEventListener('pointermove',e=>{if(!d)return;
+    if(!d.g){if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6)return;
+      d.g=d.src.cloneNode(true);Object.assign(d.g.style,{position:'fixed',zIndex:9999,width:d.w+'px',pointerEvents:'none',background:'#fff',borderRadius:'12px',boxShadow:'0 10px 30px rgba(0,0,0,.25)',transform:'rotate(-2deg)',opacity:.95});
+      document.body.appendChild(d.g);d.src.style.opacity=.35;}
+    e.preventDefault();d.g.style.left=(e.clientX-d.dx)+'px';d.g.style.top=(e.clientY-d.dy)+'px';
+    const z=zoneAt(e.clientX,e.clientY);if(z!==d.z){if(d.z)d.z.classList.remove('over');if(z)z.classList.add('over');d.z=z;}},{passive:false});
+  const end=e=>{if(!d)return;const dd=d;d=null;if(!dd.g)return;dd.g.remove();dd.src.style.opacity='';if(dd.z)dd.z.classList.remove('over');
+    const z=e.type==='pointerup'?zoneAt(e.clientX,e.clientY):null;if(!z)return;
+    const s=DB.students.find(x=>x.id===dd.id);if(!s)return;const to=z.dataset.drop;if((s.teamId||'')===to)return;
+    if(to)s.teamId=to;else delete s.teamId;save();render();};
+  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+})();
 document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&S.form)S.form[el.dataset.f]=el.value;});
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.dataset.scls){const s=DB.students.find(x=>x.id===el.dataset.scls);if(s){if(el.value)s.classId=el.value;else delete s.classId;save();render();}}
+  if(el.dataset.tname){const t=(DB.teams||[]).find(x=>x.id===el.dataset.tname);if(t&&el.value.trim()){t.name=el.value.trim();save();}}
   if(el.dataset.sgroup){const s=DB.students.find(x=>x.id===el.dataset.sgroup);if(s){if(el.value)s.groupId=el.value;else delete s.groupId;save();render();}}
   if(el.dataset.gname){const g=(DB.groups||[]).find(x=>x.id===el.dataset.gname);if(g&&el.value.trim()){g.name=el.value.trim();save();render();}}
   if(el.dataset.cname){const k=DB.classes.find(x=>x.id===el.dataset.cname);if(k&&el.value.trim()){k.name=el.value.trim();save();render();}}
@@ -1280,7 +1683,7 @@ document.addEventListener('change',e=>{
     const m=modal(`<h3>📥 Importar copia</h3><p>La copia tiene <b>${inc.students.length}</b> alumnos, <b>${(inc.assignments||[]).length}</b> tareas y <b>${(inc.results||[]).length}</b> resultados.</p><div class="row end" style="margin-top:14px"><button class="btn ghost" data-x="no">Cancelar</button><button class="btn" data-x="merge">Combinar</button><button class="btn danger" data-x="rep">Reemplazar todo</button></div>`);
     m.querySelector('[data-x=no]').onclick=()=>m.close();
     m.querySelector('[data-x=merge]').onclick=()=>{mergeDB(inc);save();m.close();render();info('Copia combinada ✅');};
-    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.classes=DB.classes||[];DB.groups=DB.groups||[];DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
+    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.classes=DB.classes||[];DB.groups=DB.groups||[];DB.teams=DB.teams||[];DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
   };fr.readAsText(el.files[0]);el.value='';}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ptext'){S.practice.text=e.target.value;render();}});
