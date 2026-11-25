@@ -917,9 +917,17 @@ const inCls=s=>{const c=curCls();return !c||(c==='_none'?!s.classId:s.classId===
 const visStudents=()=>DB.students.filter(inCls);
 /* ---- Grupos de tableta: qué alumnos salen en ESTA tableta (pueden ser de varias clases).
    La elección se guarda solo en este dispositivo y no viaja en las copias. ---- */
-const DEVKEY='trazos_grupo_dispositivo';
-const devGroup=()=>{try{const g=localStorage.getItem(DEVKEY);return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';}catch(e){return '';}};
-const setDevGroup=g=>{try{g?localStorage.setItem(DEVKEY,g):localStorage.removeItem(DEVKEY);}catch(e){}};
+/* Memoria por clase: cada clase recuerda en esta tableta su último grupo elegido
+   (p. ej. 1.º B → Tableta 1). Si otra clase usa la tableta, al volver a 1.º B sale otra vez Tableta 1. */
+const DEVKEY='trazos_grupo_por_clase';
+const grpMem=()=>{try{return JSON.parse(localStorage.getItem(DEVKEY)||'{}')||{};}catch(e){return {};}};
+const devGroup=()=>{const g=grpMem()[curCls()||'_all'];return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';};
+const setDevGroup=g=>{try{const m=grpMem();if(g)m[curCls()||'_all']=g;else delete m[curCls()||'_all'];localStorage.setItem(DEVKEY,JSON.stringify(m));}catch(e){}};
+function grpBar(){
+  const G=DB.groups||[];if(!G.length)return '';const c=curCls(),dg=devGroup();
+  const vis=G.filter(g=>!c||DB.students.some(s=>s.groupId===g.id&&inCls(s)));if(!vis.length)return '';
+  return `<div class="seg clsbar">${[['','👥 Todos'],...vis.map(g=>[g.id,'📱 '+esc(g.name)])].map(([id,n])=>`<button class="${dg===id?'on':''}" data-act="devGroup" data-v="${id}">${n}</button>`).join('')}</div>`;
+}
 const grpName=id=>((DB.groups||[]).find(g=>g.id===id)||{}).name||'';
 const homeStudents=()=>{const g=devGroup();return visStudents().filter(s=>!g||s.groupId===g);};
 function clsBar(){
@@ -957,7 +965,7 @@ function renderHome(){
   app.innerHTML=`<div class="wrap">
    <header class="hero"><div class="logo">✍️</div><div class="grow">${kidLogo()}<p class="tag">¡Supérate! Tú puedes 💪</p></div><button class="btn ghost" data-act="fs" title="Pantalla completa">⛶</button><button class="btn ghost" data-act="teacher">⚙️ Docente</button></header>
    ${MEM_ONLY?'<div class="warn">⚠️ Este navegador no permite guardar datos. Lo que se haga se perderá al cerrar. Exporta la copia desde Docente.</div>':''}
-   <div class="card"><h2>¿Quién va a escribir?${dg?` <span class="stat" style="font-size:.9rem;margin-left:8px">📱 ${esc(grpName(dg))}</span>`:''}</h2>${clsBar()}
+   <div class="card"><h2>¿Quién va a escribir?${(curCls()&&curCls()!=='_none')||dg?` <span class="stat" style="font-size:.9rem;margin-left:8px">${[curCls()&&curCls()!=='_none'?'🏫 '+esc(clsName(curCls())):'',dg?'📱 '+esc(grpName(dg)):''].filter(Boolean).join(' · ')}</span>`:''}</h2>${DB.classes.length?`<div class="row" style="margin-top:10px"><b class="muted" style="min-width:60px">Clase</b>${clsBar().replace('seg clsbar','seg')}</div>`:''}${grpBar()?`<div class="row" style="margin-top:8px"><b class="muted" style="min-width:60px">Grupo</b>${grpBar().replace('seg clsbar','seg')}</div>`:''}
     ${st.length?`<div class="avatars">${st.map(s=>`<button class="av" data-act="pick" data-id="${s.id}" style="--c:${s.color}"><span class="emo">${s.avatar}</span><span class="nm">${esc(s.name)}</span><span class="pts">⭐ ${studentStats(s.id).stars} · Nv ${levelOf(s.points).n}</span></button>`).join('')}</div>`
       :DB.students.length?`<p class="muted">${dg?'No hay alumnos de este grupo en esta clase.':'No hay alumnos en esta clase.'}</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
     <div class="row" style="margin-top:16px"><button class="btn ghost" data-act="guest">👀 Practicar como invitado</button><span class="muted small">El invitado no guarda resultados.</span></div>
@@ -1090,10 +1098,10 @@ function tAlumnos(){
    ${DB.classes.map(k=>`<div class="clsrow"><span style="font-size:1.5rem">🏫</span><input value="${esc(k.name)}" data-cname="${k.id}"><span class="muted small grow">${DB.students.filter(s=>s.classId===k.id).length} alumnos</span><button class="btn danger sm" data-act="delCls" data-id="${k.id}">Eliminar</button></div>`).join('')}
    <div class="row" style="margin-top:10px"><input class="txtin" id="newCls" placeholder="Nombre de la clase (p. ej. 1.º A)" style="max-width:320px"><button class="btn good" data-act="addCls">➕ Añadir clase</button></div></div>`;
   const G=DB.groups||[],dg=devGroup();
-  const groups=`<div class="card"><h2>📱 Grupos de tableta (${G.length})</h2><p class="muted small">Un grupo dice qué alumnos salen en una tableta, aunque sean de clases distintas (p. ej. «Tableta 1» con alumnos de 1.º A, B y C). Asigna el grupo de cada alumno en la lista de abajo y elige aquí qué grupo muestra esta tableta. Esa elección se guarda solo en esta tableta.</p>
+  const groups=`<div class="card"><h2>📱 Grupos de tableta (${G.length})</h2><p class="muted small">Un grupo dice qué alumnos salen en una tableta, aunque sean de clases distintas (p. ej. «Tableta 1» con alumnos de 1.º A, B y C). Asigna el grupo de cada alumno en la lista de abajo. En la pantalla de inicio de cada tableta se elige clase y grupo; cada clase recuerda su grupo en esa tableta.</p>
    ${G.map(g=>`<div class="clsrow"><span style="font-size:1.5rem">📱</span><input value="${esc(g.name)}" data-gname="${g.id}"><span class="muted small grow">${(n=>n+(n===1?' alumno':' alumnos'))(DB.students.filter(s=>s.groupId===g.id).length)}</span><button class="btn danger sm" data-act="delGroup" data-id="${g.id}">Eliminar</button></div>`).join('')}
    <div class="row" style="margin-top:10px"><input class="txtin" id="newGroup" placeholder="Nombre del grupo (p. ej. Tableta 1)" style="max-width:320px"><button class="btn good" data-act="addGroup">➕ Añadir grupo</button></div>
-   ${G.length?`<div class="field"><label>Esta tableta muestra</label><div class="seg"><button class="${!dg?'on':''}" data-act="devGroup" data-v="">Todos los alumnos</button>${G.map(g=>`<button class="${dg===g.id?'on':''}" data-act="devGroup" data-v="${g.id}">📱 ${esc(g.name)}</button>`).join('')}</div></div>`:''}</div>`;
+</div>`;
   return `${classes}${groups}<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px">${DB.classes.length?`<label class="muted small" style="font-weight:800">Clase</label><select class="selcls" id="newNamesCls">${clsOptions(c&&c!=='_none'?c:'')}</select>`:''}<button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
   <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}${G.length?`<select data-sgroup="${s.id}" title="Grupo de tableta"><option value="">Sin grupo</option>${G.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>📱 ${esc(g.name)}</option>`).join('')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
 }
