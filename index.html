@@ -278,9 +278,9 @@ const copyLine=()=>`<footer class="copy">${BRAND} by ${COMPANY} · ${COPY}</foot
 /* ------------------------------ DATOS ------------------------------ */
 const KEY='trazos_superate_v1';
 let DB, MEM_ONLY=false;
-function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,sound:true,voice:true,strict:'media',stop:2},students:[],classes:[],assignments:[],results:[],records:{}};}
+function defaultDB(){return{v:1,settings:{pin:'1234',freePlay:true,sound:true,voice:true,strict:'media',stop:2},students:[],classes:[],groups:[],assignments:[],results:[],records:{}};}
 function load(){
-  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});DB.classes=DB.classes||[];}
+  try{const raw=localStorage.getItem(KEY);const d=defaultDB();DB=raw?Object.assign(d,JSON.parse(raw)):d;DB.settings=Object.assign(defaultDB().settings,DB.settings||{});DB.classes=DB.classes||[];DB.groups=DB.groups||[];}
   catch(e){DB=defaultDB();MEM_ONLY=true;}
 }
 function save(){try{localStorage.setItem(KEY,JSON.stringify(DB));}catch(e){MEM_ONLY=true;}}
@@ -915,6 +915,13 @@ const clsName=id=>(DB.classes.find(c=>c.id===id)||{}).name||'';
 function curCls(){if(S.cls&&S.cls!=='_none'&&!DB.classes.some(c=>c.id===S.cls))S.cls='';if(S.cls==='_none'&&!DB.students.some(s=>!s.classId))S.cls='';return S.cls;}
 const inCls=s=>{const c=curCls();return !c||(c==='_none'?!s.classId:s.classId===c);};
 const visStudents=()=>DB.students.filter(inCls);
+/* ---- Grupos de tableta: qué alumnos salen en ESTA tableta (pueden ser de varias clases).
+   La elección se guarda solo en este dispositivo y no viaja en las copias. ---- */
+const DEVKEY='trazos_grupo_dispositivo';
+const devGroup=()=>{try{const g=localStorage.getItem(DEVKEY);return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';}catch(e){return '';}};
+const setDevGroup=g=>{try{g?localStorage.setItem(DEVKEY,g):localStorage.removeItem(DEVKEY);}catch(e){}};
+const grpName=id=>((DB.groups||[]).find(g=>g.id===id)||{}).name||'';
+const homeStudents=()=>{const g=devGroup();return visStudents().filter(s=>!g||s.groupId===g);};
 function clsBar(){
   if(!DB.classes.length)return '';const c=curCls();const none=DB.students.some(s=>!s.classId);
   return `<div class="seg clsbar">${[['','👥 Todas'],...DB.classes.map(k=>[k.id,'🏫 '+esc(k.name)]),...(none?[['_none','Sin clase']]:[])].map(([id,n])=>`<button class="${c===id?'on':''}" data-act="cls" data-v="${id}">${n}</button>`).join('')}</div>`;
@@ -946,13 +953,13 @@ function downloadFallback(name,text,mime){
 
 /* ================================ INICIO ================================ */
 function renderHome(){
-  const st=visStudents();
+  const st=homeStudents();const dg=devGroup();
   app.innerHTML=`<div class="wrap">
    <header class="hero"><div class="logo">✍️</div><div class="grow">${kidLogo()}<p class="tag">¡Supérate! Tú puedes 💪</p></div><button class="btn ghost" data-act="fs" title="Pantalla completa">⛶</button><button class="btn ghost" data-act="teacher">⚙️ Docente</button></header>
    ${MEM_ONLY?'<div class="warn">⚠️ Este navegador no permite guardar datos. Lo que se haga se perderá al cerrar. Exporta la copia desde Docente.</div>':''}
-   <div class="card"><h2>¿Quién va a escribir?</h2>${clsBar()}
+   <div class="card"><h2>¿Quién va a escribir?${dg?` <span class="stat" style="font-size:.9rem;margin-left:8px">📱 ${esc(grpName(dg))}</span>`:''}</h2>${clsBar()}
     ${st.length?`<div class="avatars">${st.map(s=>`<button class="av" data-act="pick" data-id="${s.id}" style="--c:${s.color}"><span class="emo">${s.avatar}</span><span class="nm">${esc(s.name)}</span><span class="pts">⭐ ${studentStats(s.id).stars} · Nv ${levelOf(s.points).n}</span></button>`).join('')}</div>`
-      :DB.students.length?`<p class="muted">No hay alumnos en esta clase.</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
+      :DB.students.length?`<p class="muted">${dg?'No hay alumnos de este grupo en esta clase.':'No hay alumnos en esta clase.'}</p>`:`<p class="muted">Todavía no hay alumnos. Entra en <b>⚙️ Docente</b> para añadir tu lista de clase.</p>`}
     <div class="row" style="margin-top:16px"><button class="btn ghost" data-act="guest">👀 Practicar como invitado</button><span class="muted small">El invitado no guarda resultados.</span></div>
    </div></div>${copyLine()}`;
 }
@@ -1082,8 +1089,13 @@ function tAlumnos(){
   const classes=`<div class="card"><h2>🏫 Clases (${DB.classes.length})</h2><p class="muted small">Crea tus clases y asigna cada alumno a la suya. Luego podrás ver la pantalla de inicio, las tareas y los resultados de una clase o de todas.</p>
    ${DB.classes.map(k=>`<div class="clsrow"><span style="font-size:1.5rem">🏫</span><input value="${esc(k.name)}" data-cname="${k.id}"><span class="muted small grow">${DB.students.filter(s=>s.classId===k.id).length} alumnos</span><button class="btn danger sm" data-act="delCls" data-id="${k.id}">Eliminar</button></div>`).join('')}
    <div class="row" style="margin-top:10px"><input class="txtin" id="newCls" placeholder="Nombre de la clase (p. ej. 1.º A)" style="max-width:320px"><button class="btn good" data-act="addCls">➕ Añadir clase</button></div></div>`;
-  return `${classes}<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px">${DB.classes.length?`<label class="muted small" style="font-weight:800">Clase</label><select class="selcls" id="newNamesCls">${clsOptions(c&&c!=='_none'?c:'')}</select>`:''}<button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
-  <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
+  const G=DB.groups||[],dg=devGroup();
+  const groups=`<div class="card"><h2>📱 Grupos de tableta (${G.length})</h2><p class="muted small">Un grupo dice qué alumnos salen en una tableta, aunque sean de clases distintas (p. ej. «Tableta 1» con alumnos de 1.º A, B y C). Asigna el grupo de cada alumno en la lista de abajo y elige aquí qué grupo muestra esta tableta. Esa elección se guarda solo en esta tableta.</p>
+   ${G.map(g=>`<div class="clsrow"><span style="font-size:1.5rem">📱</span><input value="${esc(g.name)}" data-gname="${g.id}"><span class="muted small grow">${(n=>n+(n===1?' alumno':' alumnos'))(DB.students.filter(s=>s.groupId===g.id).length)}</span><button class="btn danger sm" data-act="delGroup" data-id="${g.id}">Eliminar</button></div>`).join('')}
+   <div class="row" style="margin-top:10px"><input class="txtin" id="newGroup" placeholder="Nombre del grupo (p. ej. Tableta 1)" style="max-width:320px"><button class="btn good" data-act="addGroup">➕ Añadir grupo</button></div>
+   ${G.length?`<div class="field"><label>Esta tableta muestra</label><div class="seg"><button class="${!dg?'on':''}" data-act="devGroup" data-v="">Todos los alumnos</button>${G.map(g=>`<button class="${dg===g.id?'on':''}" data-act="devGroup" data-v="${g.id}">📱 ${esc(g.name)}</button>`).join('')}</div></div>`:''}</div>`;
+  return `${classes}${groups}<div class="card"><h2>➕ Añadir alumnos</h2><p class="muted small">Pega la lista de clase: un nombre por línea. Se asigna un animal y un color a cada uno (se pueden cambiar tocándolos).</p><textarea id="newNames" placeholder="Lucía&#10;Hugo&#10;Martina"></textarea><div class="row end" style="margin-top:10px">${DB.classes.length?`<label class="muted small" style="font-weight:800">Clase</label><select class="selcls" id="newNamesCls">${clsOptions(c&&c!=='_none'?c:'')}</select>`:''}<button class="btn good" data-act="addStudents">Añadir a la lista</button></div></div>
+  <div class="card"><h2>Lista de alumnos (${list.length}${list.length!==DB.students.length?' de '+DB.students.length:''})</h2>${clsBar()}${list.length?list.map(s=>{const ss=studentStats(s.id);return `<div class="srow"><button class="emo" data-act="cycleAv" data-id="${s.id}" title="Cambiar animal">${s.avatar}</button><button class="swatch" style="background:${s.color}" data-act="cycleCol" data-id="${s.id}" title="Cambiar color"></button><input value="${esc(s.name)}" data-sname="${s.id}">${DB.classes.length?`<select data-scls="${s.id}" title="Clase">${clsOptions(s.classId||'')}</select>`:''}${G.length?`<select data-sgroup="${s.id}" title="Grupo de tableta"><option value="">Sin grupo</option>${G.map(g=>`<option value="${g.id}" ${s.groupId===g.id?'selected':''}>📱 ${esc(g.name)}</option>`).join('')}</select>`:''}<span class="muted small grow">✍️ ${ss.count} · ⭐ ${ss.stars} · ${s.points||0} pts · 🏅 ${(s.badges||[]).length}</span><button class="btn ghost sm" data-act="resetSt" data-id="${s.id}">Reiniciar progreso</button><button class="btn danger sm" data-act="delSt" data-id="${s.id}">Eliminar</button></div>`;}).join(''):`<p class="muted">${DB.students.length?'No hay alumnos en esta clase.':'Aún no hay alumnos.'}</p>`}</div>`;
 }
 function tTareas(){
   let form='';
@@ -1109,7 +1121,7 @@ function tTareas(){
      ${seg('strict',Object.entries(STRICT_N),'Exigencia (cuánto puede salirse antes de contar salida)')}
      ${seg('stop',STOP_OPTS,'Si se queda parado sin mover el dedo… (el intento no vale y vuelve a empezar)')}
      ${seg('guides',[[true,'Con pauta'],[false,'Sin pauta']],'Pauta (líneas)')}
-     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button>${DB.classes.map(k=>`<button class="btn ghost sm" data-act="fstuCls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}</div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}${s.classId&&DB.classes.length>1?` <span class="small" style="opacity:.7">· ${esc(clsName(s.classId))}</span>`:''}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
+     <div class="field"><label>Alumnos</label><div class="row"><button class="btn ghost sm" data-act="fstuAll">Todos</button><button class="btn ghost sm" data-act="fstuNone">Ninguno</button>${DB.classes.map(k=>`<button class="btn ghost sm" data-act="fstuCls" data-v="${k.id}">🏫 ${esc(k.name)}</button>`).join('')}${(DB.groups||[]).map(g=>`<button class="btn ghost sm" data-act="fstuGrp" data-v="${g.id}">📱 ${esc(g.name)}</button>`).join('')}</div><div class="chips">${DB.students.map(s=>`<button class="${F.studentIds.includes(s.id)?'on':''}" data-act="fstu" data-v="${s.id}">${s.avatar} ${esc(s.name)}${s.classId&&DB.classes.length>1?` <span class="small" style="opacity:.7">· ${esc(clsName(s.classId))}</span>`:''}</button>`).join('')||'<span class="muted">Primero añade alumnos.</span>'}</div></div>
      <div class="row end" style="margin-top:18px"><button class="btn ghost" data-act="fcancel">Cancelar</button><button class="btn good big" data-act="fsave">💾 Guardar tarea</button></div></div>`;
   }
   const list=DB.assignments.slice().reverse().filter(a=>!curCls()||a.studentIds.some(id=>{const s=DB.students.find(x=>x.id===id);return s&&inCls(s);})).map(a=>{
@@ -1150,7 +1162,7 @@ function tAjustes(){
    </div></div>
    <div class="card"><h2>💾 Copia de seguridad</h2><p class="muted small">Los datos se guardan <b>solo en este dispositivo y navegador</b>. Para pasarlos a otra tableta o a tu ordenador, exporta aquí e importa allí. «Combinar» suma alumnos, tareas y resultados sin borrar lo que ya hay.</p>
     <div class="row"><button class="btn" data-act="expJSON">⬇️ Exportar copia (.json)</button><label class="btn ghost">📥 Importar copia<input type="file" id="impFile" accept=".json,application/json" hidden></label></div>
-    <p class="muted small">${DB.classes.length} clases · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
+    <p class="muted small">${DB.classes.length} clases · ${(DB.groups||[]).length} grupos · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
    <div class="card"><h2>📏 Cómo se mide</h2><ul class="help muted">
     <li><b>Precisión</b>: porcentaje del recorrido del dedo que queda dentro del camino de la letra.</li>
     <li><b>Salida</b>: cada vez que el dedo se aleja del camino más de lo que permite la exigencia. En modo bola, la bola se suelta y hay que volver a cogerla.</li>
@@ -1171,7 +1183,7 @@ function exportCSV(){
   download(`trazos_resultados_${new Date().toISOString().slice(0,10)}.csv`,'﻿'+[H.join(';'),...lines].join('\n'),'text/csv;charset=utf-8');
 }
 function mergeDB(inc){
-  DB.classes=DB.classes||[];['classes','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
+  DB.classes=DB.classes||[];DB.groups=DB.groups||[];['classes','groups','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
   const ids=new Set(DB.results.map(r=>r.id));(inc.results||[]).forEach(r=>{if(!ids.has(r.id))DB.results.push(r);});
   DB.results.sort((a,b)=>a.date<b.date?-1:1);
   for(const sid in (inc.records||{})){const R=DB.records[sid]||(DB.records[sid]={});for(const k in inc.records[sid]){const a=R[k],b=inc.records[sid][k];R[k]=!a?b:{t:Math.min(a.t,b.t),prec:Math.max(a.prec,b.prec)};}}
@@ -1202,6 +1214,10 @@ const ACT={
  cls:b=>{S.cls=b.dataset.v;try{localStorage.setItem(CLS_KEY,S.cls);}catch(e){}render();},
  addCls:()=>{const i=$('#newCls');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre de la clase.');return;}if(DB.classes.some(c=>c.name.toLowerCase()===n.toLowerCase())){info('Ya hay una clase con ese nombre.');return;}DB.classes.push({id:uid(),name:n});save();render();},
  delCls:b=>{const k=DB.classes.find(c=>c.id===b.dataset.id);const n=DB.students.filter(s=>s.classId===k.id).length;confirmBox(`¿Eliminar la clase <b>${esc(k.name)}</b>?${n?` Sus ${n} alumnos se conservan, quedan «sin clase».`:''}`,'Eliminar',()=>{DB.classes=DB.classes.filter(c=>c.id!==k.id);DB.students.forEach(s=>{if(s.classId===k.id)delete s.classId;});save();render();});},
+ fstuGrp:b=>{const ids=DB.students.filter(s=>s.groupId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
+ addGroup:()=>{const i=$('#newGroup');const n=(i&&i.value||'').trim();if(!n){info('Escribe el nombre del grupo.');return;}DB.groups=DB.groups||[];if(DB.groups.some(g=>g.name.toLowerCase()===n.toLowerCase())){info('Ya hay un grupo con ese nombre.');return;}DB.groups.push({id:uid(),name:n});save();render();},
+ delGroup:b=>{const g=DB.groups.find(x=>x.id===b.dataset.id);confirmBox(`¿Eliminar el grupo <b>${esc(g.name)}</b>? Los alumnos no se borran, solo se quedan sin grupo.`,'Eliminar',()=>{DB.groups=DB.groups.filter(x=>x.id!==g.id);DB.students.forEach(s=>{if(s.groupId===g.id)delete s.groupId;});save();render();});},
+ devGroup:b=>{setDevGroup(b.dataset.v);render();},
  fstuCls:b=>{const ids=DB.students.filter(s=>s.classId===b.dataset.v).map(s=>s.id);const a=S.form.studentIds;const all=ids.every(i=>a.includes(i));S.form.studentIds=all?a.filter(i=>!ids.includes(i)):[...new Set([...a,...ids])];render();},
  addStudents:()=>{const t=$('#newNames').value.split('\n').map(s=>s.trim()).filter(Boolean);const cs=$('#newNamesCls');const cid=cs?cs.value:'';t.forEach(name=>{const i=DB.students.length;const st={id:uid(),name,avatar:AVATARS[i%AVATARS.length],color:COLORS[i%COLORS.length],points:0,badges:[],missions:[],recs:0};if(cid)st.classId=cid;DB.students.push(st);});save();render();},
  cycleAv:b=>{const s=DB.students.find(x=>x.id===b.dataset.id);s.avatar=AVATARS[(AVATARS.indexOf(s.avatar)+1)%AVATARS.length];save();render();},
@@ -1248,13 +1264,15 @@ document.addEventListener('input',e=>{const el=e.target;if(el.dataset.f&&S.form)
 document.addEventListener('change',e=>{
   const el=e.target;
   if(el.dataset.scls){const s=DB.students.find(x=>x.id===el.dataset.scls);if(s){if(el.value)s.classId=el.value;else delete s.classId;save();render();}}
+  if(el.dataset.sgroup){const s=DB.students.find(x=>x.id===el.dataset.sgroup);if(s){if(el.value)s.groupId=el.value;else delete s.groupId;save();render();}}
+  if(el.dataset.gname){const g=(DB.groups||[]).find(x=>x.id===el.dataset.gname);if(g&&el.value.trim()){g.name=el.value.trim();save();render();}}
   if(el.dataset.cname){const k=DB.classes.find(x=>x.id===el.dataset.cname);if(k&&el.value.trim()){k.name=el.value.trim();save();render();}}
   if(el.dataset.sname){const s=DB.students.find(x=>x.id===el.dataset.sname);if(s&&el.value.trim()){s.name=el.value.trim();save();}}
   if(el.id==='impFile'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{let inc;try{inc=JSON.parse(fr.result);if(!inc||!Array.isArray(inc.students))throw 0;}catch(_){info('Ese archivo no es una copia válida de TRAZOS.');return;}
     const m=modal(`<h3>📥 Importar copia</h3><p>La copia tiene <b>${inc.students.length}</b> alumnos, <b>${(inc.assignments||[]).length}</b> tareas y <b>${(inc.results||[]).length}</b> resultados.</p><div class="row end" style="margin-top:14px"><button class="btn ghost" data-x="no">Cancelar</button><button class="btn" data-x="merge">Combinar</button><button class="btn danger" data-x="rep">Reemplazar todo</button></div>`);
     m.querySelector('[data-x=no]').onclick=()=>m.close();
     m.querySelector('[data-x=merge]').onclick=()=>{mergeDB(inc);save();m.close();render();info('Copia combinada ✅');};
-    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.classes=DB.classes||[];DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
+    m.querySelector('[data-x=rep]').onclick=()=>{DB=Object.assign(defaultDB(),inc);DB.classes=DB.classes||[];DB.groups=DB.groups||[];DB.settings=Object.assign(defaultDB().settings,inc.settings||{});save();m.close();render();info('Copia restaurada ✅');};
   };fr.readAsText(el.files[0]);el.value='';}
 });
 document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.id==='ptext'){S.practice.text=e.target.value;render();}});
