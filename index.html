@@ -159,6 +159,7 @@ th{font-size:.78rem;color:var(--muted);text-transform:uppercase;letter-spacing:.
 .task{border:2px solid var(--line);border-radius:16px;padding:14px;background:#FFFCF5}
 .task.off{opacity:.55}
 .task h3{font-size:1.1rem}
+.syncstep{display:flex;gap:14px;align-items:flex-start;padding:14px 0;border-top:2px dashed var(--line)}.syncstep>b{flex:none;width:40px;height:40px;border-radius:50%;background:var(--acc);color:#fff;display:grid;place-items:center;font-size:1.3rem}.syncstep h3{margin:2px 0 4px}
 body.calm *,body.calm *::before,body.calm *::after{animation:none!important;transition:none!important}
 .memok{position:absolute;right:16px;bottom:16px;z-index:5}
 .cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0}.cmp>div{text-align:center}.cmp canvas{width:100%;max-width:340px;aspect-ratio:340/300;background:#FFFDF8;border-radius:16px;box-shadow:inset 0 0 0 3px #F3EBDA;display:block;margin:6px auto 0}
@@ -997,10 +998,10 @@ function teamBar(){
 }
 const DEVKEY2='trazos_grupo_por_clase'; // dispositivo elegido por clase (misma clave que antes: se conserva lo ya elegido)
 const dvMem=()=>{try{return JSON.parse(localStorage.getItem(DEVKEY2)||'{}')||{};}catch(e){return {};}};
-const devGroup=()=>{const g=dvMem()[curCls()||'_all'];return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';};
+const devGroup=()=>{const rt=roleTab();if(rt)return rt;const g=dvMem()[curCls()||'_all'];return g&&(DB.groups||[]).some(x=>x.id===g)?g:'';};
 const setDevGroup=g=>{try{const m=dvMem();if(g)m[curCls()||'_all']=g;else delete m[curCls()||'_all'];localStorage.setItem(DEVKEY2,JSON.stringify(m));}catch(e){}};
 function grpBar(){
-  const G=DB.groups||[];if(!G.length)return '';const c=curCls(),dg=devGroup();
+  const G=DB.groups||[];if(!G.length||roleTab())return '';const c=curCls(),dg=devGroup();
   const vis=G.filter(g=>!c||DB.students.some(s=>s.groupId===g.id&&inCls(s)));if(!vis.length)return '';
   return `<div class="seg">${[['','👥 Todos'],...vis.map(g=>[g.id,'📱 '+esc(g.name)])].map(([id,n])=>`<button class="${dg===id?'on':''}" data-act="devGroup" data-v="${id}">${n}</button>`).join('')}</div>`;
 }
@@ -1415,9 +1416,9 @@ function retoFinish(r){
 function newForm(){const vs=visStudents();return{id:null,title:'',activity:'trace',set:'letras',style:'upper',sel:{},text:'',cons:[],vows:['a','e','i','o','u'],inv:false,cfg:Object.assign({mode:'ball',size:1,reps:3,helps:'full',strict:DB.settings.strict||'media',guides:true},cfgDef()),studentIds:vs.map(s=>s.id)};}
 function renderTeacher(){
   const sc=$('.wrap')?window.scrollY:0;
-  const tabs=[['alumnos','👧 Alumnos'],['equipos','🤝 Equipos'],['tareas','🎯 Tareas'],['resultados','📊 Resultados'],['ajustes','⚙️ Ajustes']];
+  const tabs=[['alumnos','👧 Alumnos'],['equipos','🤝 Equipos'],['tareas','🎯 Tareas'],['resultados','📊 Resultados'],['sync','🔄 Pasar datos'],['ajustes','⚙️ Ajustes']];
   let body='';
-  if(S.ttab==='alumnos')body=tAlumnos();else if(S.ttab==='equipos')body=tEquipos();else if(S.ttab==='tareas')body=tTareas();else if(S.ttab==='resultados')body=tResultados();else body=tAjustes();
+  if(S.ttab==='alumnos')body=tAlumnos();else if(S.ttab==='equipos')body=tEquipos();else if(S.ttab==='tareas')body=tTareas();else if(S.ttab==='resultados')body=tResultados();else if(S.ttab==='sync')body=tSync();else body=tAjustes();
   app.innerHTML=`<div class="wrap"><div class="shead" style="padding-top:max(6px,env(safe-area-inset-top))"><button class="ibtn" data-act="home">←</button><h1 class="grow" style="font-size:1.7rem">Panel docente</h1></div>
    <div class="tabs">${tabs.map(([k,n])=>`<button class="${S.ttab===k?'on':''}" data-act="ttab" data-v="${k}">${n}</button>`).join('')}</div>${body}</div>${copyLine()}`;
   window.scrollTo(0,sc);
@@ -1524,6 +1525,92 @@ function tResultados(){
   return `<div class="card"><div class="row"><h2 class="grow" style="margin:0">Resumen de la clase</h2><button class="btn" data-act="csv">⬇️ Exportar CSV</button></div>${clsBar()}<p class="muted small">Medias de los últimos 20 trazos de cada alumno. Toca un nombre para ver el detalle por letra o forma.${curCls()?' El CSV exporta solo esta clase.':''}</p>
    <div class="tscroll"><table><thead><tr><th>Alumno</th><th>Trazos</th><th>⭐</th><th>Precisión</th><th>Tiempo medio</th><th>Salidas/trazo</th><th>Dirección/trazo</th><th>Misiones</th><th>Récords</th></tr></thead><tbody>${rows||'<tr><td colspan="9" class="muted">Sin alumnos.</td></tr>'}</tbody></table></div></div>${detail}`;
 }
+/* ===================== PASAR DATOS (tableta ⇄ ordenador) =====================
+   Cada aparato sabe qué es (se guarda solo en él). Las tabletas envían sus resultados y logros;
+   el ordenador los junta todos. El ordenador manda alumnos, tareas, clases, equipos y ajustes.
+   Al juntar nunca se pierde nada: resultados, medallas, misiones y récords se suman. */
+const ROLEKEY='trazos_rol',SENTKEY='trazos_ultimo_envio';
+const myRole=()=>{try{return localStorage.getItem(ROLEKEY)||'';}catch(e){return '';}};
+const setRole=r=>{try{localStorage.setItem(ROLEKEY,r);}catch(e){}};
+const roleTab=()=>{const r=myRole();return r&&r!=='pc'&&(DB.groups||[]).some(g=>g.id===r)?r:'';};
+const lastSent=()=>{try{return localStorage.getItem(SENTKEY)||'';}catch(e){return '';}};
+const fdate=d=>d?new Date(d).toLocaleString('es-ES',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'nunca';
+function mergeProgress(o,x){
+  o.points=Math.max(o.points||0,x.points||0);o.recs=Math.max(o.recs||0,x.recs||0);
+  o.badges=[...new Set([...(o.badges||[]),...(x.badges||[])])];o.missions=[...new Set([...(o.missions||[]),...(x.missions||[])])];
+  const R=Object.assign({},o.retos||{}),X=x.retos||{};for(const k in X){const a=R[k],b=X[k];if(!a||(k==='race'?b.t<a.t:(b.got>a.got||(b.got===a.got&&b.t<a.t))))R[k]=b;}if(Object.keys(R).length)o.retos=R;
+}
+function mergeResults(list){const ids=new Set(DB.results.map(r=>r.id));let n=0;(list||[]).forEach(r=>{if(!ids.has(r.id)){DB.results.push(r);ids.add(r.id);n++;}});DB.results.sort((a,b)=>a.date<b.date?-1:1);return n;}
+function mergeRecords(inc,keep){for(const sid in (inc||{})){if(keep&&!keep.has(sid))continue;const R=DB.records[sid]||(DB.records[sid]={});for(const k in inc[sid]){const a=R[k],b=inc[sid][k];R[k]=!a?b:{t:Math.min(a.t,b.t),prec:Math.max(a.prec,b.prec)};}}}
+const stamp=()=>{const d=new Date(),p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}_${p(d.getHours())}h${p(d.getMinutes())}`;};
+const fslug=t=>String(t).normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^A-Za-z0-9]+/g,'-').replace(/^-|-$/g,'')||'tableta';
+function sendFile(name,obj,share){
+  const txt=JSON.stringify(obj);
+  if(share){try{const f=new File([txt],name,{type:'application/json'});if(navigator.canShare&&navigator.canShare({files:[f]})){navigator.share({files:[f],title:name}).catch(e=>{if(!e||e.name!=='AbortError')download(name,txt,'application/json');});return;}}catch(e){}}
+  download(name,txt,'application/json');
+}
+function tabletPack(){const r=roleTab();return{kind:'trazos-tableta',v:1,from:r,name:grpName(r),date:new Date().toISOString(),students:DB.students,results:DB.results,records:DB.records};}
+function pcPack(){return{kind:'trazos-ordenador',v:1,date:new Date().toISOString(),settings:DB.settings,classes:DB.classes,groups:DB.groups,teams:DB.teams||[],students:DB.students,assignments:DB.assignments,results:DB.results,records:DB.records};}
+function applyTabletPack(pk){ // en el ordenador
+  let nuevos=0;(pk.students||[]).forEach(x=>{const o=DB.students.find(s=>s.id===x.id);if(o)mergeProgress(o,x);else{DB.students.push(x);nuevos++;}});
+  const n=mergeResults(pk.results);mergeRecords(pk.records);
+  DB.syncLog=DB.syncLog||{};DB.syncLog[pk.from||pk.name]={name:pk.name,date:pk.date,n};
+  return `📱 <b>${esc(pk.name||'Tableta')}</b> (${fdate(pk.date)}): ${n} resultado${n===1?'':'s'} nuevo${n===1?'':'s'}${nuevos?` · ${nuevos} alumno${nuevos===1?'':'s'} que no tenías`:''}`;
+}
+function applyPcPack(pk,r){ // en una tableta: se queda solo con sus alumnos
+  const mine=new Set((pk.students||[]).filter(s=>s.groupId===r).map(s=>s.id));
+  const old=new Map(DB.students.map(s=>[s.id,s]));
+  DB.students=(pk.students||[]).filter(s=>mine.has(s.id)).map(s=>{const c=JSON.parse(JSON.stringify(s));const o=old.get(s.id);if(o)mergeProgress(c,o);return c;});
+  DB.classes=pk.classes||[];DB.groups=pk.groups||[];DB.teams=pk.teams||[];
+  DB.assignments=(pk.assignments||[]).filter(a=>(a.studentIds||[]).some(id=>mine.has(id)));
+  mergeResults((pk.results||[]).filter(x=>mine.has(x.sid)));mergeRecords(pk.records,mine); // los resultados propios nunca se borran
+  DB.settings=Object.assign(defaultDB().settings,DB.settings,pk.settings||{});
+  return `✅ Recibido del ordenador: <b>${mine.size}</b> alumno${mine.size===1?'':'s'} de <b>📱 ${esc(grpName(r))}</b> y <b>${DB.assignments.length}</b> tarea${DB.assignments.length===1?'':'s'}.`;
+}
+function receiveFiles(files){
+  const list=[...files];const out=[];let i=0;
+  const next=()=>{
+    if(i>=list.length){save();render();if(out.length)info(out.join('<br>'));return;}
+    const f=list[i++];const fr=new FileReader();
+    fr.onload=()=>{let pk;try{pk=JSON.parse(fr.result);}catch(_){out.push(`❌ ${esc(f.name)}: no es un archivo de TRAZOS.`);return next();}
+      const role=myRole();
+      if(pk.kind==='trazos-tableta'){
+        if(role&&role!=='pc'){out.push(`⚠️ ${esc(f.name)} es de otra tableta: se recibe en el <b>ordenador</b>.`);return next();}
+        if(!role)setRole('pc');out.push(applyTabletPack(pk));return next();}
+      if(pk.kind==='trazos-ordenador'){
+        if(role==='pc'){out.push(`⚠️ ${esc(f.name)} lo ha preparado el ordenador para las tabletas: ábrelo en cada tableta.`);return next();}
+        const r=role&&(pk.groups||[]).some(g=>g.id===role)?role:'';
+        if(r){out.push(applyPcPack(pk,r));return next();}
+        if(!(pk.groups||[]).length){out.push('⚠️ En el ordenador todavía no hay dispositivos. Créalos en <b>Alumnos → Dispositivos</b>, asigna a cada alumno su tableta y vuelve a preparar el archivo.');return next();}
+        const m=modal(`<h3>📍 ¿Qué tableta es esta?</h3><p class="muted">Solo se pregunta la primera vez. Esta tableta se quedará con los alumnos de ese dispositivo.</p><div class="seg">${pk.groups.map(g=>`<button data-g="${g.id}">📱 ${esc(g.name)} (${(pk.students||[]).filter(s=>s.groupId===g.id).length})</button>`).join('')}</div>`);
+        m.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>{setRole(b.dataset.g);m.close();DB.groups=pk.groups;out.push(applyPcPack(pk,b.dataset.g));next();});
+        return;}
+      out.push(`❌ ${esc(f.name)}: es una copia completa antigua. Ábrela en Ajustes → Copia completa.`);next();};
+    fr.readAsText(f);
+  };next();
+}
+function tSync(){
+  const r=myRole(),rt=roleTab(),G=DB.groups||[];
+  const chooser=`<div class="card"><h2>📍 Este aparato es…</h2><p class="muted small">Se elige una vez en cada aparato y no viaja en los archivos.${r&&r!=='pc'&&!rt?' <b>El dispositivo elegido ya no existe: vuelve a elegir.</b>':''}</p><div class="seg">${[['pc','🖥️ Ordenador del profesor'],...G.map(g=>[g.id,'📱 '+esc(g.name)])].map(([v,n])=>`<button class="${r===v?'on':''}" data-act="setRole" data-v="${v}">${n}</button>`).join('')}</div>${!G.length?'<p class="muted small">¿Es una tableta nueva? Pulsa <b>📥 Recibir del ordenador</b> y te preguntará qué tableta es.</p>':''}</div>`;
+  const recvBtn=(txt,multi)=>`<label class="btn ${multi?'good':''} big" style="margin-top:8px;display:inline-flex">${txt}<input type="file" id="syncFile" accept=".json,application/json" ${multi?'multiple':''} hidden></label>`;
+  let main='';
+  if(r==='pc'){
+    const L=DB.syncLog||{};
+    main=`<div class="card"><h2>🖥️ Ordenador del profesor</h2><p class="muted small">Aquí se juntan los datos de todas las tabletas. Los alumnos, las tareas y los equipos los decides aquí.</p>
+     <div class="syncstep"><b>1</b><div class="grow"><h3>📥 Recibir de las tabletas</h3><p class="muted small">Elige <b>a la vez</b> todos los archivos «TRAZOS_Tableta…» que te hayan llegado (por AirDrop suelen estar en <i>Descargas</i>). Puedes repetir un archivo: no se duplica nada.</p>${recvBtn('📥 Recibir de las tabletas',true)}
+      ${G.length?`<div class="chips" style="margin-top:8px">${G.map(g=>{const x=L[g.id];return `<span class="stat" style="font-size:.85rem">📱 ${esc(g.name)}: ${x?'último '+fdate(x.date):'sin recibir'}</span>`;}).join('')}</div>`:''}</div></div>
+     <div class="syncstep"><b>2</b><div class="grow"><h3>📤 Preparar para las tabletas</h3><p class="muted small">Crea <b>un único archivo</b> para todas las tabletas. Cada tableta se queda solo con sus alumnos, sus tareas y sus logros. Hazlo cuando cambies alumnos, tareas, equipos o ajustes.</p><div class="row"><button class="btn big" data-act="pcSend">📤 Preparar para las tabletas</button>${navigator.canShare?'<button class="btn ghost" data-act="pcShare">Compartir… (AirDrop)</button>':''}</div></div></div>
+     <p class="muted small">🔁 <b>Rutina recomendada</b> (p. ej. el viernes): en cada tableta «Enviar al ordenador» → aquí «Recibir de las tabletas» → si has cambiado algo, «Preparar para las tabletas» → en cada tableta «Recibir del ordenador».</p></div>`;
+  }else if(rt){
+    const ls=lastSent();const pend=DB.results.filter(x=>!ls||x.date>ls).length;
+    main=`<div class="card"><h2>📱 ${esc(grpName(rt))}</h2>
+     <div class="syncstep"><b>1</b><div class="grow"><h3>📤 Enviar al ordenador</h3><p class="muted small">Último envío: <b>${fdate(ls)}</b> · ${pend?`<b style="color:#c2410c">${pend} resultado${pend===1?'':'s'} sin enviar</b>`:'todo enviado ✅'}. Se abrirá el menú de compartir: elige <b>AirDrop</b> (iPad → Mac), <b>Quick Share</b> (Android → Windows) o correo.</p><div class="row"><button class="btn good big" data-act="tabSend">📤 Enviar al ordenador</button><button class="btn big" data-act="tabSave">💾 Guardar en la tableta</button></div><p class="muted small" style="margin-top:6px">💾 <b>Para pasarlo con cable</b>: guarda el archivo en la carpeta <b>Download</b> de la tableta, conéctala al ordenador y cópialo desde el Explorador de archivos.</p></div></div>
+     <div class="syncstep"><b>2</b><div class="grow"><h3>📥 Recibir del ordenador</h3><p class="muted small">Abre el archivo «TRAZOS_para_tabletas…». Se actualizan alumnos, tareas, equipos y ajustes. Los resultados de esta tableta nunca se borran.</p>${recvBtn('📥 Recibir del ordenador',false)}</div></div></div>`;
+  }else{
+    main=`<div class="card"><h2>🔄 Pasar datos</h2><p class="muted">Primero indica abajo qué aparato es este. Si es una <b>tableta nueva</b>, recibe directamente el archivo del ordenador:</p>${recvBtn('📥 Recibir del ordenador',false)}</div>`;
+  }
+  return main+chooser;
+}
 function tAjustes(){
   const s=DB.settings;const tg=(k,n)=>`<div class="row"><label class="grow" style="font-weight:800">${n}</label><div class="seg"><button class="${s[k]?'on':''}" data-act="set" data-k="${k}" data-v="1">Sí</button><button class="${!s[k]?'on':''}" data-act="set" data-k="${k}" data-v="0">No</button></div></div>`;
   return `<div class="card"><h2>Preferencias</h2><div class="opts">
@@ -1540,7 +1627,7 @@ function tAjustes(){
    <div class="card"><h2>🔒 Acceso</h2><div class="opts">
     <div class="row"><label class="grow" style="font-weight:800">PIN docente</label><input class="txtin" id="newPin" inputmode="numeric" maxlength="8" placeholder="Nuevo PIN (4-8 cifras)" style="max-width:220px;min-width:140px"><button class="btn sm" data-act="setPin">Cambiar</button></div>
    </div></div>
-   <div class="card"><h2>💾 Copia de seguridad</h2><p class="muted small">Los datos se guardan <b>solo en este dispositivo y navegador</b>. Para pasarlos a otra tableta o a tu ordenador, exporta aquí e importa allí. «Combinar» suma alumnos, tareas y resultados sin borrar lo que ya hay.</p>
+   <div class="card"><h2>💾 Copia completa (avanzado)</h2><p class="muted small">Para pasar datos entre tabletas y ordenador usa <b>🔄 Pasar datos</b>. Esto es una copia completa de este aparato, para guardarla o restaurarla. Los datos se guardan <b>solo en este dispositivo y navegador</b>. «Combinar» suma alumnos, tareas y resultados sin borrar lo que ya hay.</p>
     <div class="row"><button class="btn" data-act="expJSON">⬇️ Exportar copia (.json)</button><label class="btn ghost">📥 Importar copia<input type="file" id="impFile" accept=".json,application/json" hidden></label></div>
     <p class="muted small">${DB.classes.length} clases · ${(DB.groups||[]).length} dispositivos · ${(DB.teams||[]).length} equipos · ${DB.students.length} alumnos · ${DB.assignments.length} tareas · ${DB.results.length} resultados</p></div>
    <div class="card"><h2>📏 Cómo se mide</h2><ul class="help muted">
@@ -1564,7 +1651,7 @@ function exportCSV(){
   download(`trazos_resultados_${new Date().toISOString().slice(0,10)}.csv`,'﻿'+[H.join(';'),...lines].join('\n'),'text/csv;charset=utf-8');
 }
 function mergeDB(inc){
-  DB.classes=DB.classes||[];DB.groups=DB.groups||[];['classes','groups','teams','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else{const pts=Math.max(o.points||0,x.points||0);Object.assign(o,x);if(k==='students'){o.points=pts;}}});});
+  DB.classes=DB.classes||[];DB.groups=DB.groups||[];['classes','groups','teams','students','assignments'].forEach(k=>{DB[k]=DB[k]||[];const m=new Map(DB[k].map(x=>[x.id,x]));(inc[k]||[]).forEach(x=>{const o=m.get(x.id);if(!o)DB[k].push(x);else if(k==='students'){const keep=JSON.parse(JSON.stringify(o));Object.assign(o,x);mergeProgress(o,keep);}else Object.assign(o,x);});});
   const ids=new Set(DB.results.map(r=>r.id));(inc.results||[]).forEach(r=>{if(!ids.has(r.id))DB.results.push(r);});
   DB.results.sort((a,b)=>a.date<b.date?-1:1);
   for(const sid in (inc.records||{})){const R=DB.records[sid]||(DB.records[sid]={});for(const k in inc.records[sid]){const a=R[k],b=inc.records[sid][k];R[k]=!a?b:{t:Math.min(a.t,b.t),prec:Math.max(a.prec,b.prec)};}}
@@ -1593,6 +1680,11 @@ const ACT={
  viewTrace:()=>{clearTimeout(S.autoT);const ab=document.querySelector('.autobar');if(ab)ab.remove();showTrace();},
  adapt:b=>adaptModal(b.dataset.id),
  adSet:b=>{const st=DB.students.find(x=>x.id===b.dataset.id);if(!st)return;st.adapt=st.adapt||{};const k=b.dataset.k,v=b.dataset.v;if(v==='')delete st.adapt[k];else st.adapt[k]=v==='true'?true:v==='false'?false:+v;if(!Object.keys(st.adapt).length)delete st.adapt;save();adaptModal(st.id);},
+ setRole:b=>{setRole(b.dataset.v);render();},
+ tabSave:()=>{if(!roleTab())return;const n=grpName(roleTab());sendFile(`TRAZOS_${fslug(n)}_${stamp()}.json`,tabletPack(),false);try{localStorage.setItem(SENTKEY,new Date().toISOString());}catch(e){}setTimeout(render,800);},
+ tabSend:()=>{if(!roleTab())return;const n=grpName(roleTab());sendFile(`TRAZOS_${fslug(n)}_${stamp()}.json`,tabletPack(),true);try{localStorage.setItem(SENTKEY,new Date().toISOString());}catch(e){}setTimeout(render,800);},
+ pcSend:()=>sendFile(`TRAZOS_para_tabletas_${stamp()}.json`,pcPack(),false),
+ pcShare:()=>sendFile(`TRAZOS_para_tabletas_${stamp()}.json`,pcPack(),true),
  setNum:b=>{DB.settings[b.dataset.k]=+b.dataset.v;save();render();},
  retoGo:b=>{if(!retosOK(student()))return go('student');S.reto={kind:b.dataset.v};go('reto');},
  retoQuit:()=>go('student'),
@@ -1679,6 +1771,7 @@ document.addEventListener('change',e=>{
   if(el.dataset.gname){const g=(DB.groups||[]).find(x=>x.id===el.dataset.gname);if(g&&el.value.trim()){g.name=el.value.trim();save();render();}}
   if(el.dataset.cname){const k=DB.classes.find(x=>x.id===el.dataset.cname);if(k&&el.value.trim()){k.name=el.value.trim();save();render();}}
   if(el.dataset.sname){const s=DB.students.find(x=>x.id===el.dataset.sname);if(s&&el.value.trim()){s.name=el.value.trim();save();}}
+  if(el.id==='syncFile'&&el.files&&el.files.length){receiveFiles(el.files);el.value='';return;}
   if(el.id==='impFile'&&el.files&&el.files[0]){const fr=new FileReader();fr.onload=()=>{let inc;try{inc=JSON.parse(fr.result);if(!inc||!Array.isArray(inc.students))throw 0;}catch(_){info('Ese archivo no es una copia válida de TRAZOS.');return;}
     const m=modal(`<h3>📥 Importar copia</h3><p>La copia tiene <b>${inc.students.length}</b> alumnos, <b>${(inc.assignments||[]).length}</b> tareas y <b>${(inc.results||[]).length}</b> resultados.</p><div class="row end" style="margin-top:14px"><button class="btn ghost" data-x="no">Cancelar</button><button class="btn" data-x="merge">Combinar</button><button class="btn danger" data-x="rep">Reemplazar todo</button></div>`);
     m.querySelector('[data-x=no]').onclick=()=>m.close();
